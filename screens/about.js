@@ -16,7 +16,7 @@ import {ThemeButton} from "../components/themeButton";
 export default class AboutScreen extends React.Component {
     static navigationOptions = ({navigation}) => {
         try {
-            myfuncs.myBreadCrumbs('navigationOptions', 'AudioScreen');
+            myfuncs.myBreadCrumbs('navigationOptions', 'AboutScreen');
             return {
                 headerTitle: () => <ScreenTitle title={"About"}/>,
                 headerRight: () => <ThemeButton/>,
@@ -95,7 +95,7 @@ export default class AboutScreen extends React.Component {
 							EMail:  Stories@kibity.com
 							{"\n"}
 							{"\n"}
-							We sincere hope you enjoy Kibity.
+							We sincerely hope you enjoy Kibity.
 
 						</Text>
 						</View>

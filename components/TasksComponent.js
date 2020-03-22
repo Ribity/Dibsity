@@ -3,7 +3,6 @@ import {View, AppState} from 'react-native';
 
 import {connect} from "react-redux";
 import {bindActionCreators} from "redux";
-import {updateStoryList} from "../actions/storyListActions";
 import MyDefines from "../constants/MyDefines";
 import myfuncs from "../services/myFuncs";
 
@@ -18,7 +17,7 @@ class TasksComponent extends React.Component {
         try {
             super(props);
 
-            this.loadStorageIntoRedux();
+            // this.loadStorageIntoRedux();
 
             AppState.addEventListener('change', this._handleAppStateChange);
         } catch (error) {
@@ -28,7 +27,6 @@ class TasksComponent extends React.Component {
         try {
             myfuncs.myBreadCrumbs('DidMount', "TasksComponent");
 
-            this.buildStoryList();
             sixtyMinute = setInterval(this.sixtyMinuteTask, 10 * 60 * 1000);
             // sixtyMinute = setInterval(this.sixtyMinuteTask, 10 * 1000);
             // myfuncs.setAwakeorNot(this.props.settings.keep_awake);
@@ -68,71 +66,7 @@ class TasksComponent extends React.Component {
             myfuncs.myRepo(error);
         }
     };
-    buildStoryList = () => {
-        try {
-            myfuncs.myBreadCrumbs('buildStoryList', "TasksComponent");
-            let local_story_list = require('../assets/allStoriesList.json');
-            this.props.updateStoryList(local_story_list);
 
-            this.getStoryListFromServer();
-            // setTimeout(() => {this.getStoryListFromServer()}, 10000);    // This is for testing
-
-        } catch (error) {
-            myfuncs.myRepo(error);
-        }
-    };
-    getStoryListFromServer = () => {
-        try {
-            myfuncs.myBreadCrumbs('getStoryListFromServer', "TasksComponent");
-            let storyList_url = MyDefines.stories_url_bucket + "allStoriesList.json";
-            if (MyDefines.log_details || MyDefines.log_server)
-                console.log("serverStoryList url:", storyList_url);
-            fetch(storyList_url)
-                .then(response => response.json())
-                .then(responseJson => {
-                    if (MyDefines.log_details || MyDefines.log_server)
-                        console.log("fetched remote storyList");
-                    let serverStoryList = responseJson;
-                    this.appendServerStoryList(serverStoryList);
-                })
-                .catch(error => {
-                    if (MyDefines.log_details)
-                        console.log("file NOT retrieved from server", storyList_url);
-                    console.error(error);
-                });
-            return null;
-        } catch (error) {
-            myfuncs.myRepo(error);
-        }
-    };
-    appendServerStoryList = async (serverStoryList) => {
-        if (MyDefines.log_details || MyDefines.log_server) {
-            console.log("StoryList Props: ", this.props.story_list.stories.length);
-            console.log("StoryList Server: ", serverStoryList.stories.length);
-        }
-        if (serverStoryList.stories.length > this.props.story_list.stories.length) {
-            let numExistingStories = this.props.story_list.stories.length;
-            let numServerStories = serverStoryList.stories.length;
-            if (MyDefines.log_details || MyDefines.log_server)
-                console.log(numServerStories-numExistingStories, " new stories from serverStoryList:");
-
-            // let newList = this.clone(this.props.story_list);
-            let newList = this.clone(this.props.story_list);
-            for (let idx=numExistingStories; idx<numServerStories; idx++) {
-                let newStory = this.clone(serverStoryList.stories[idx]);
-                newStory.remoteStory = true;
-                newList.stories.push(newStory);
-            }
-            await this.props.updateStoryList(newList);
-            if (MyDefines.log_details || MyDefines.log_server) {
-                console.log("NewStoryList:", this.props.story_list);
-            }
-        } else {
-            if (MyDefines.log_details || MyDefines.log_server) {
-                console.log("No new stories from serverStoryList");
-            }
-        }
-    };
     clone = (obj) => {
         if (null == obj || "object" != typeof obj) return obj;
         let copy = obj.constructor();
@@ -164,14 +98,12 @@ class TasksComponent extends React.Component {
 }
 
 const mapStateToProps = (state) => {
-    const { story_list } = state;
     const { settings } = state;
-    return { story_list, settings }
+    return { settings }
 };
 
 const mapDispatchToProps = dispatch => (
     bindActionCreators({
-        updateStoryList,
     }, dispatch)
 );
 

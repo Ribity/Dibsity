@@ -13,13 +13,8 @@ import {ScreenTitle} from "../components/screenTitle";
 import {ThemeButton} from "../components/themeButton";
 import {MyButton} from "../components/MyButton";
 import myStyles from "../myStyles";
-import * as Speech from "expo-speech";
 
 const {height, width} = Dimensions.get('window');
-
-const pause_data = MyDefines.pause_data;
-const pitch_data = MyDefines.pitch_data;
-const rate_data = MyDefines.rate_data;
 
 class SettingsScreen extends React.Component {
 
@@ -39,13 +34,11 @@ class SettingsScreen extends React.Component {
         super(props);
         this.state = {
             settings: this.props.settings,
-            bVoicesAvailable: false,
         };
     };
     componentDidMount() {
         try {
             myfuncs.myBreadCrumbs('Did mount', this.props.navigation.state.routeName);
-            this.getVoices();
         } catch (error) {
             myfuncs.myRepo(error);
         }
@@ -55,30 +48,10 @@ class SettingsScreen extends React.Component {
             myfuncs.myBreadCrumbs('getDerivedStateFromProps', "Settings");
             let update = {};
 
-            if (prevState.settings !== nextProps.settings) {
-                update.settings = nextProps.settings;
-            }
+            // if (prevState.settings !== nextProps.settings) {
+            //     update.settings = nextProps.settings;
+            // }
             return Object.keys(update).length ? update: null;
-        } catch (error) {
-            myfuncs.myRepo(error);
-        }
-    };
-    getVoices = async () => {
-        try {
-            myfuncs.myBreadCrumbs('getDerivedStateFromProps', "Settings");
-            let list = await Speech.getAvailableVoicesAsync();
-            if (list !== null  && list !== undefined && list.length > 1 ) {
-                // console.log(list);
-                this.setState({bVoicesAvailable: true});
-            }
-        } catch (error) {
-            myfuncs.myRepo(error);
-        }
-    };
-    goToSettingsAudio = () => {
-        try {
-            myfuncs.myBreadCrumbs('goToSettingsAudio', this.props.navigation.state.routeName);
-            this.props.navigation.navigate("SettingsAudio");
         } catch (error) {
             myfuncs.myRepo(error);
         }
@@ -100,80 +73,6 @@ class SettingsScreen extends React.Component {
                             onChange={(bEvent) => this.updateSettings({keep_awake: bEvent})}
                         />
 
-                        <Toggle
-                            style={styles.toggle}
-                            status='warning'
-
-                            text='Play Ribbit After Each Story'
-                            textStyle={styles.text}
-                            checked={this.state.settings.playEndOfStoryRibbit}
-                            onChange={(bEvent) => this.updateSettings({playEndOfStoryRibbit: bEvent})}
-                        />
-
-                        <View style={{paddingTop: 5}}/>
-
-                        { (this.state.settings.retrieved_user_data === true) &&
-                            <View>
-                                <Select
-                                style={styles.select}
-                                data={pause_data}
-                                status='warning'
-                                label='Pause between each line'
-                                onSelect={(event) =>
-                                    this.updateSettings({pauseLineIdx: event.idx})}
-                                selectedOption={pause_data[this.state.settings.pauseLineIdx]}
-                                textStyle={styles.textStyle}
-                                labelStyle={styles.labelStyle}
-                                controlStyle={styles.controlStyle}
-                                />
-                                <Select
-                                    style={styles.select}
-                                    data={pause_data}
-                                    status='warning'
-                                    label='Pause between each story'
-                                    onSelect={(event) =>
-                                        this.updateSettings({pauseStoryIdx: event.idx})}
-                                    selectedOption={pause_data[this.state.settings.pauseStoryIdx]}
-                                    textStyle={styles.textStyle}
-                                    labelStyle={styles.labelStyle}
-                                    controlStyle={styles.controlStyle}
-                                />
-
-                                <Select
-                                    style={styles.select}
-                                    data={pitch_data}
-                                    status='warning'
-                                    label='Voice pitch'
-                                    onSelect={(event) =>
-                                        this.updateSettings({pitchIdx: event.idx})}
-                                    selectedOption={pitch_data[this.state.settings.pitchIdx]}
-                                    textStyle={styles.textStyle}
-                                    labelStyle={styles.labelStyle}
-                                    controlStyle={styles.controlStyle}
-                                />
-                                <Select
-                                    style={styles.select}
-                                    data={rate_data}
-                                    status='warning'
-                                    label='Voice speed'
-                                    onSelect={(event) =>
-                                        this.updateSettings({rateIdx: event.idx})}
-                                    selectedOption={rate_data[this.state.settings.rateIdx]}
-                                    textStyle={styles.textStyle}
-                                    labelStyle={styles.labelStyle}
-                                    controlStyle={styles.controlStyle}
-                                />
-                            </View>
-                        }
-                        {(!myfuncs.isAndroid() && this.state.bVoicesAvailable === true) &&
-                        <View style={{alignSelf: 'center'}}>
-                            <View style={{padding: 5}}/>
-                            <MyButton buttonStyle={myStyles.selectButton}
-                                      textStyle={myStyles.selectButtonText}
-                                      onPress={() => this.goToSettingsAudio()}
-                                      title="Select Voice"/>
-                        </View>
-                        }
                     </Layout>
 
                     <MyHelpIcon onPress={this.onHelpPress}/>

@@ -46,7 +46,7 @@ export default class PrivacyScreen extends React.Component {
 
                             <View>
                             <Text style={styles.privacyText}>
-                                Kibity does not transfer any data from your device. We do not
+                                Dibsity does not transfer any data from your device. We do not
                                 collect, share or sell your data.
                             </Text>
                             <Text style={styles.privacyText}>

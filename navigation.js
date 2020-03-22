@@ -6,14 +6,9 @@ import {Ionicons} from '@expo/vector-icons';
 import MyDefines from './constants/MyDefines';
 
 
-import AudioScreen  from './screens/audio';
+import MapScreen  from './screens/mapScreen';
 import PrivacyScreen from './screens/PrivacyScreen';
-import StoriesScreen from './screens/stories';
-import ProfilesScreen  from './screens/profiles';
-import ProfileSetActive from './screens/profileSetActive';
-import ProfileCustomize  from './screens/profileCustomize';
 import SettingsScreen from './screens/settings';
-import SettingsAudio from './screens/SettingsAudio';
 import AboutScreen from './screens/about';
 
 let defNav = {
@@ -23,46 +18,26 @@ let defNav = {
     headerTintColor: MyDefines.myHeaderTextColor,
 };
 
-const AudioStack = createStackNavigator({
-    Audio: AudioScreen,
+const MapStack = createStackNavigator({
+    Map: MapScreen,
 },
     {defaultNavigationOptions: () => (defNav)});
-
-const StoriesStack = createStackNavigator({
-    Stories: StoriesScreen,
-}, {defaultNavigationOptions: () => (defNav)});
-
-const ProfilesStack = createStackNavigator({
-    Profiles: ProfilesScreen,
-    PrivacyProfiles: PrivacyScreen,
-    ProfileSetActive: ProfileSetActive,
-    ProfileCustomize: ProfileCustomize,
-}, {defaultNavigationOptions: () => (defNav)});
 
 const SettingsStack = createStackNavigator({
     Settings: SettingsScreen,
     PrivacySettings: PrivacyScreen,
-    SettingsAudio: SettingsAudio,
     About: AboutScreen,
 }, {defaultNavigationOptions: () => (defNav)});
 
-AudioStack.navigationOptions = {
-    tabBarLabel: "Audio",
-};
-StoriesStack.navigationOptions = {
-    tabBarLabel: 'Stories',
-};
-ProfilesStack.navigationOptions = {
-    tabBarLabel: 'Profiles',
+MapStack.navigationOptions = {
+    tabBarLabel: "Map",
 };
 SettingsStack.navigationOptions = {
     tabBarLabel: 'Settings',
 };
 
 const bottomTabNavigator = createBottomTabNavigator({
-    AudioStack,
-    StoriesStack,
-    ProfilesStack,
+    MapStack,
     SettingsStack,
 }, {
      defaultNavigationOptions: ({ navigation }) => ({
@@ -79,14 +54,10 @@ const bottomTabNavigator = createBottomTabNavigator({
          tabBarIcon: ({ focused, horizontal, tintColor }) => {
              const { routeName } = navigation.state;
              let iconName;
-             if (routeName === 'AudioStack') {
+             if (routeName === 'MapStack') {
                  iconName = focused
                      ? 'ios-play'
                      : 'ios-play-circle';
-             } else if (routeName === 'StoriesStack') {
-                 iconName = 'ios-book';
-             } else if (routeName === 'ProfilesStack') {
-                 iconName = 'ios-person';
              } else if (routeName === 'SettingsStack') {
                  iconName = 'ios-settings';
              }

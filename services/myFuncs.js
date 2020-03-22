@@ -18,7 +18,6 @@ class myFuncs  {
 
     init = async () => {
         let settings = MyDefines.default_settings;
-        let profiles = MyDefines.default_profiles;
         let new_user = false;
         try {
             this.initRepo();
@@ -31,56 +30,26 @@ class myFuncs  {
             new_user = await this.check_new_user();
 
             let retObj = await this.getUserSettingsFromLocalStorage();
-            for (let i=0; i<3; i++) {
-                if (retObj.profiles.profile[i].character.length === 3) {
-                    retObj.profiles.profile[i].character[3] = JSON.parse(JSON.stringify(profiles.profile[i].character[3]));
-                    retObj.profiles.profile[i].character[4] = JSON.parse(JSON.stringify(profiles.profile[i].character[4]));
-                    retObj.profiles.profile[i].character[5] = JSON.parse(JSON.stringify(profiles.profile[i].character[5]));
-                }
-                if (retObj.profiles.profile[i].celebrity === null ||
-                    retObj.profiles.profile[i].celebrity === undefined ||
-                    retObj.profiles.profile[i].celebrity === "")
-                    retObj.profiles.profile[i].celebrity = JSON.parse(JSON.stringify(profiles.profile[i].celebrity));
-                if (retObj.profiles.profile[i].event === null ||
-                    retObj.profiles.profile[i].event === undefined ||
-                    retObj.profiles.profile[i].event === "")
-                    retObj.profiles.profile[i].event = JSON.parse(JSON.stringify(profiles.profile[i].event));
-                if (retObj.profiles.profile[i].snack === null ||
-                    retObj.profiles.profile[i].snack === undefined ||
-                    retObj.profiles.profile[i].snack === "")
-                    retObj.profiles.profile[i].snack = JSON.parse(JSON.stringify(profiles.profile[i].snack));
-            }
-
 
             settings = {...settings, ...retObj.settings};
-            profiles = { ...profiles, ...retObj.profiles};
 
-            // console.log("init after", profiles);
+            // console.log("init after");
 
-            this.prepareSound();
-
-            this.loadSounds({
-                // ribbit: {uri: "https://www.ribity.com/sounds/ribbit.wav"},
-                ribbit: {uri: "https://ribity.com/sounds/ribbit2.wav"},
-            });
-
-            bSoundsAreLoaded = true;
-            // this.audioPlayer = new Audio.Sound();
         } catch (error) {
             this.myRepo(error);
         }
-        return {settings: settings, profiles: profiles, new_user: new_user};
+        return {settings: settings, new_user: new_user};
     };
     check_new_user = async () => {
         let new_user = false;
         try {
             this.myBreadCrumbs('check_new_user', "myfuncs");
-            let registered_user = await hardStorage.getKey("kibity_user");
+            let registered_user = await hardStorage.getKey("dibsity_user");
             if (registered_user === null) {
                 new_user = true;
-                hardStorage.setKey("kibity_user", true);
+                hardStorage.setKey("dibsity_user", true);
                 // console.log("new user");
-                Sentry.captureMessage("New Kibity user", 'info');
+                Sentry.captureMessage("New Dibsity user", 'info');
             }
         } catch (error) {
             this.myRepo(error);
@@ -89,7 +58,6 @@ class myFuncs  {
     };
     getUserSettingsFromLocalStorage = async () => {
         let settings = MyDefines.default_settings;
-        let profiles = MyDefines.default_profiles;
         try {
             this.myBreadCrumbs('getUserSettingsFromLocalStorage', "myfuncs");
             let user_settings = await hardStorage.getKey("user_settings");
@@ -98,20 +66,13 @@ class myFuncs  {
                 if (MyDefines.log_details)
                     console.log("Successfully retrieved settings from Storage:", settings)
             }
-            let user_profiles = await hardStorage.getKey("user_profiles");
-            if (user_profiles !== null) {
-                profiles = {...profiles, ...user_profiles};
-                if (MyDefines.log_details)
-                    console.log("Successfully retrieved profiles from Storage:", profiles)
-            }
         } catch (error) {
             this.myRepo(error);
         }
         // console.log("settingsFromStorage:", settings);
         // console.log("profilesFromStorage:", profiles);
         settings.retrieved_user_data = true;
-        profiles.retrieved_user_data = true;
-        return {settings: settings, profiles: profiles};
+        return {settings: settings};
     };
     writeUserDataToLocalStorage = async (key, data) => {
         try {
@@ -183,86 +144,6 @@ class myFuncs  {
             this.myRepo(error);
         }
     };
-    playRibbit = async (routeName) => {
-        try {
-            this.myBreadCrumbs('playRibbit', routeName);
-
-            if (!bSoundsAreLoaded)
-                return;
-
-            // console.log("Play Ribbit");
-            await this.playSound("ribbit");
-            // console.log("Ribbit played");
-        } catch (error) {
-            this.myRepo(error);
-        }
-    };
-    prepareSound = async () => {
-        try {
-            this.myBreadCrumbs('prepareSound', "myfuncs");
-            await Audio.setIsEnabledAsync(true);
-            if (MyDefines.detail_logging)
-                console.log('Set Expo.Audio enabled');
-            await Audio.setAudioModeAsync({
-                playsInSilentModeIOS: true,
-                staysActiveInBackground: true,  // added June 6, 2019.  With Expo v33.0 an exception was requiring this
-                allowsRecordingIOS: false,
-                interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
-                shouldDuckAndroid: false,
-                interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
-                playThroughEarpieceAndroid: false,
-            });
-            if (MyDefines.detail_logging)
-                console.log('Set Expo.Audio mode');
-        } catch (error) {
-            this.myRepo(error);
-        }
-    };
-
-    loadSounds(sources) {
-        try {
-            this.myBreadCrumbs('loadSounds', "myfuncs");
-            SOURCES = {...SOURCES, ...sources};
-        } catch (error) {
-            this.myRepo(error);
-        }
-    }
-
-    playSound = async (key) => {
-        try {
-            this.myBreadCrumbs('playSound', "myfuncs");
-            if (bSoundIsPlaying)    // PlayAsync kept sending an exception to Sentry occasionally. Trying this to fix it.
-                return;
-
-            bSoundIsPlaying = true;
-            if (SOUNDS[key]) {
-                // console.log("That sound has already been played, let's reload.");
-                await SOUNDS[key].unloadAsync();
-                // console.log('Sound unloaded successfully!');
-            } else {
-                // console.log('New sound to play!');
-                SOUNDS[key] = new Audio.Sound();
-            }
-
-            try {
-                // console.log("LoadAsync");
-                await SOUNDS[key].loadAsync(SOURCES[key]);
-                // console.log("LoadAsync completed");
-            } catch (error) {
-                console.log("Ignore: Sound was already loading");
-            }
-
-            // console.log('Sound loaded successfully!');
-            SOUNDS[key].playAsync();
-            // console.log('Playing ' + key);
-        } catch (error) {
-            this.myRepo(error);
-        }
-        setTimeout(this.resetSound, 1000);
-    };
-    resetSound = () => {
-        bSoundIsPlaying = false;
-    };
     myRepo = (error) => {
         try {
             Sentry.captureException(error);
@@ -328,19 +209,19 @@ class myFuncs  {
         }
         return false;
     };
-    incrementNumStoriesPlayed = async () => {
-        let numPlayed = await hardStorage.getKey("numPlayed");
+    incrementNumUsage = async () => {
+        let numUsage = await hardStorage.getKey("numUsage");
 
-        if (numPlayed !== null) {
-            numPlayed++;
+        if (numUsage !== null) {
+            numUsage++;
         } else {
-            numPlayed = 1;
+            numUsage = 1;
         }
-        await hardStorage.setKey("numPlayed", numPlayed);
+        await hardStorage.setKey("numUsage", numUsage);
 
         if (Constants.isDevice || Constants.default.isDevice) {
-            if (numPlayed === 5 || numPlayed === 20 || numPlayed % 100 === 0) {
-                let msg = 'Number of Stories Played = ' + numPlayed.toString();
+            if (numUsage === 5 || numUsage === 20 || numUsage % 100 === 0) {
+                let msg = 'Number of Usages = ' + numUsage.toString();
                 Sentry.captureMessage(msg, 'info');
             }
         }

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Kibity",
-    "slug": "Kibity",
+    "name": "Dibsity",
+    "slug": "Dibsity",
     "privacy": "public",
     "sdkVersion": "36.0.0",
     "platforms": [
@@ -9,8 +9,8 @@
       "android",
       "web"
     ],
-    "scheme": "kibity",
-    "version": "1.0.04",
+    "scheme": "dibsity",
+    "version": "1.0.0",
     "orientation": "portrait",
     "primaryColor": "#008000",
     "icon": "./assets/images/PurpleFaceIconGold_1024x1024.png",
@@ -27,15 +27,15 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.kibity.kibity",
+      "bundleIdentifier": "com.dibsity.dibsity",
       "icon": "./assets/images/PurpleFaceIconGold_1024x1024.png",
       "appStoreUrl": "https://apps.apple.com/us/app/kibity/id1499289186?ls=1"
     },
     "android": {
-      "package": "com.kibity.kibity",
+      "package": "com.dibsity.dibsity",
       "versionCode": 1,
       "icon": "./assets/images/PurpleFaceIconGold_1024x1024.png",
-      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.kibity.kibity",
+      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.dibsity.dibsity",
       "permissions": []
     },
     "androidStatusBarColor": "#000000",
@@ -43,6 +43,6 @@
       "barStyle": "light-content",
       "backgroundColor": "#000000"
     },
-    "description": "Personalized children's stories"
+    "description": "Inclusive parking app"
   }
 }

@@ -12,6 +12,7 @@ web-report/
 .idea/
 constants/ApiKeys.js
 ApiKeys.js
+yarn.lock
 
 # macOS
 .DS_Store

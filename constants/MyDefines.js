@@ -21,5 +21,12 @@ export default {
         retrieved_user_data: false,
     },
 
+    default_vehicle: {
+        color: "White",
+        make: "Ford",
+        model: "Prius",
+        year: 2019,
+    },
+
 }
 

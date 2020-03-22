@@ -4,10 +4,9 @@ import helpStyles from './helpStyles';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import myfuncs from "../../services/myFuncs";
 
-
-export const HelpSettingsAudio = ( {} ) => {
+export const HelpMap = ({} ) => {
     try {
-	myfuncs.myBreadCrumbs('HelpSettings', 'HelpSettings');
+	myfuncs.myBreadCrumbs('HelpMap', 'HelpMap');
 		return (<KeyboardAwareScrollView
 			// style={helpStyles.container}
 			resetScrollToCoords={{x:0, y:0}}
@@ -15,15 +14,16 @@ export const HelpSettingsAudio = ( {} ) => {
 		>
 
 			<Text  style={helpStyles.helpText}>
-				<Text style={helpStyles.helpBold}>Settings Audio: </Text>
-				This screen is only available if your device offers additional
-				voices. Select a voice, then hit Test.	If you like the voice,
-				save it.  The voice you save will persist until you modify
-				the voice via this screen again.
+				<Text style={helpStyles.helpBold}>Map: </Text>
+				Map Help Screen
+				{"\n"}
+				{"\n"}
+
 			   </Text>
 			</KeyboardAwareScrollView>
 		);
     } catch (error) {
 	myfuncs.myRepo(error);
     }
-};
+}
+

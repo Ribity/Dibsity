@@ -3,13 +3,9 @@ import {View} from 'react-native';
 
 import myfuncs from '../services/myFuncs';
 import helpStyles from "./helpModals/helpStyles";
-import {HelpAudio} from './helpModals/HelpAudio';
-import {HelpStories} from './helpModals/HelpStories';
-import {HelpProfiles} from './helpModals/HelpProfiles';
+import {HelpMap} from './helpModals/HelpMap';
+import {HelpMyVehicle} from './helpModals/HelpMyVehicle';
 import {HelpSettings} from './helpModals/HelpSettings';
-import {HelpSettingsAudio} from './helpModals/HelpSettingsAudio';
-import {HelpProfileSetActive} from './helpModals/HelpProfileSetActive';
-import {HelpProfileCustomize} from './helpModals/HelpProfileCustomize';
 export const HelpComponent= ( {screen, parm1} ) => {
     try {
         myfuncs.myBreadCrumbs('HelpComponent', 'HelpComponent');
@@ -17,28 +13,15 @@ export const HelpComponent= ( {screen, parm1} ) => {
 
         <View style={helpStyles.modalStyle}>
 
-            {screen === "Audio" &&
-            <HelpAudio/>
+            {screen === "Map" &&
+            <HelpMap/>
             }
-            {screen === "Stories" &&
-            <HelpStories/>
-            }
-            {screen === "Profiles" &&
-            <HelpProfiles/>
-            }
-            {screen === "ProfileSetActive" &&
-            <HelpProfileSetActive/>
-            }
-            {screen === "ProfileCustomize" &&
-            <HelpProfileCustomize/>
+            {screen === "MyVehicle" &&
+            <HelpMyVehicle/>
             }
             {screen === "Settings" &&
             <HelpSettings/>
             }
-            {screen === "SettingsAudio" &&
-            <HelpSettingsAudio/>
-            }
-
         </View>
         );
     } catch (error) {

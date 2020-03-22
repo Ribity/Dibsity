@@ -1,4 +1,5 @@
 import React from 'react';
+import MapView from 'react-native-maps';
 import {Alert, StyleSheet, View, Dimensions, Image, TouchableOpacity} from 'react-native';
 import * as StoreReview from 'expo-store-review';
 import {SafeAreaView} from "react-navigation";
@@ -32,12 +33,11 @@ class MapScreen extends React.Component {
             myfuncs.myBreadCrumbs('navigationOptions', 'MapScreen');
             const { params = {} } = navigation.state;
             return {
-                headerLeft: () => <ProfileHeader profile={params.myProfile} onPress={params.onPress}/>,
-                headerTitle: () => <ScreenTitle title={"Audio"}
+                headerLeft: () => <ProfileHeader profile={params.myProfile}/>,
+                headerTitle: () => <ScreenTitle title={"Map"}
                                                 androidMoveLeft={20}
                                                 // privacy={() => navigation.navigate("Privacy")}
                 />,
-                headerRight: () => <ThemeButton/>,
             };
         } catch (error) {
             myfuncs.myRepo(error);
@@ -124,24 +124,9 @@ class MapScreen extends React.Component {
                    <Layout style={{flex: 1, alignItems: 'center'}}>
                        <TasksComponent/>
 
-                       <View>
-                           <View style={{padding: 25}}/>
-                           <TouchableOpacity onPress={this.showToast}>
-                               <Text style={styles.welcomeUser}>Welcome to Dibsity</Text>
-                               <Image style={styles.dibsityLogo} source={dibsityLogo}/>
-                           </TouchableOpacity>
-
-                           <View style={{padding: 15}}/>
-                           <View>
-                               <View style={{padding: 15}}/>
-                               <MyButton buttonStyle={myStyles.selectButton}
-                                         textStyle={myStyles.selectButtonText}
-                                         onPress={this.goToStoriesScreen}
-                                         title={"Select a Story, or\nBuild a PlayList"}/>
-                           </View>
-
+                       <View style={styles.container}>
+                           <MapView style={styles.mapStyle} />
                        </View>
-
 
                        <Toast
                            ref="toast"
@@ -193,6 +178,10 @@ const styles = StyleSheet.create({
         backgroundColor: MyDefines.myTabColor,
 
         // backgroundColor: 'white',
+    },
+    mapStyle: {
+        width: width,
+        height: height,
     },
     dibsityLogo: {
         justifyContent:'center',

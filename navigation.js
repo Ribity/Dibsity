@@ -8,6 +8,7 @@ import MyDefines from './constants/MyDefines';
 
 import MapScreen  from './screens/mapScreen';
 import PrivacyScreen from './screens/PrivacyScreen';
+import MyVehicleScreen from './screens/myVehicle';
 import SettingsScreen from './screens/settings';
 import AboutScreen from './screens/about';
 
@@ -23,6 +24,11 @@ const MapStack = createStackNavigator({
 },
     {defaultNavigationOptions: () => (defNav)});
 
+const MyVehicleStack = createStackNavigator({
+        myVehicle: MyVehicleScreen,
+    },
+    {defaultNavigationOptions: () => (defNav)});
+
 const SettingsStack = createStackNavigator({
     Settings: SettingsScreen,
     PrivacySettings: PrivacyScreen,
@@ -32,12 +38,16 @@ const SettingsStack = createStackNavigator({
 MapStack.navigationOptions = {
     tabBarLabel: "Map",
 };
+MyVehicleStack.navigationOptions = {
+    tabBarLabel: "Vehicle",
+};
 SettingsStack.navigationOptions = {
     tabBarLabel: 'Settings',
 };
 
 const bottomTabNavigator = createBottomTabNavigator({
     MapStack,
+    MyVehicleStack,
     SettingsStack,
 }, {
      defaultNavigationOptions: ({ navigation }) => ({
@@ -58,9 +68,12 @@ const bottomTabNavigator = createBottomTabNavigator({
                  iconName = focused
                      ? 'ios-play'
                      : 'ios-play-circle';
-             } else if (routeName === 'SettingsStack') {
+             } else if (routeName === 'MyVehicleStack') {
+                 iconName = 'ios-car';
+             }  else if (routeName === 'SettingsStack') {
                  iconName = 'ios-settings';
              }
+
              // You can return any component that you like here!
              return <Ionicons name={iconName} size={20} color={tintColor} />;
              },

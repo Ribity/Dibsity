@@ -10,7 +10,7 @@ export const MyHelpIcon = ( {isAdmob, onPress, } ) => {
                 <TouchableOpacity style={[styles.floatingHelpIcon, isAdmob && {bottom: 80}]}
                                   onPress={onPress}
                                   hitSlop={styles.hitSlop}>
-                        <Ionicons name="md-help-circle" size={30} color="mediumpurple"/>
+                        <Ionicons name="md-help-circle" size={30} color="green"/>
                 </TouchableOpacity>
         );
     } catch (error) {

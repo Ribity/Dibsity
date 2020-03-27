@@ -4,7 +4,7 @@ import helpStyles from './helpStyles';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import myfuncs from "../../services/myFuncs";
 
-export const HelpMap = ({} ) => {
+export const HelpMyVehicle = ({} ) => {
     try {
 	myfuncs.myBreadCrumbs('HelpMyVehicle', 'HelpMyVehicle');
 		return (<KeyboardAwareScrollView

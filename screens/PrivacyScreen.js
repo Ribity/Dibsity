@@ -78,7 +78,7 @@ export default class PrivacyScreen extends React.Component {
 const styles = StyleSheet.create({
 
     privacyText: {
-        color: 'mediumpurple',
+        color: 'green',
 
         fontSize: 20,
         lineHeight: 22,

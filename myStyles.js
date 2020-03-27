@@ -4,7 +4,7 @@ import React from "react";
 
 const {height, width} = Dimensions.get('window');
 
-// Note, 'honeydew' is a nice light green. See search/leaps list. Claimed ribbons
+// Note, 'honeydew' is a nice light mediumseagreen. See search/leaps list. Claimed ribbons
 const myStyles = StyleSheet.create({
     myHeaderTouch: {
         // padding: 5,
@@ -20,7 +20,7 @@ const myStyles = StyleSheet.create({
     myHeaderText: {
         fontSize: 17,
         opacity: 1.0,
-        color: 'purple',
+        color: 'green',
         alignItems: 'center',
         padding: 2,
     },
@@ -40,7 +40,7 @@ const myStyles = StyleSheet.create({
     ribbonHeader: {
         fontSize: 23,
         fontWeight: 'bold',
-        color: 'purple',
+        color: 'green',
     },
     flatListPadding: {
         paddingTop: MyDefines.myStatusBarHeight + 35,
@@ -68,23 +68,23 @@ const myStyles = StyleSheet.create({
     },
     flatListHeaderText: {
         fontSize: 13,
-        color: 'purple',
+        color: 'green',
     },
     // searchHeaderText: {
     //     fontSize: 15,
-    //     color: 'green',
+    //     color: 'mediumseagreen',
     //     // opacity: 0.7,
     //     alignItems: "left",
     // },
     infoText: {
         fontSize: 17,
-        color: 'purple',
+        color: 'green',
         alignItems: 'center',
         padding: 5,
     },
     infoLargerText: {
         fontSize: 23,
-        color: 'purple',
+        color: 'green',
         textAlign: 'center',
     },
     iFieldLabel: {
@@ -95,7 +95,7 @@ const myStyles = StyleSheet.create({
         textAlign: 'left',
         alignSelf: 'stretch',
         paddingTop: 15,
-        color: 'mediumpurple',
+        color: 'green',
         fontWeight: 'bold',
     },
     iFieldLabelSmaller: {
@@ -106,7 +106,7 @@ const myStyles = StyleSheet.create({
         textAlign: 'left',
         alignSelf: 'stretch',
         paddingTop: 15,
-        color: 'mediumpurple',
+        color: 'green',
         fontWeight: 'bold',
     },
     iField: {
@@ -117,10 +117,10 @@ const myStyles = StyleSheet.create({
         borderRadius: 10,
         fontWeight: 'bold',
         fontSize: 18,
-        color: 'purple',
+        color: 'green',
     },
     regularButton: {
-        backgroundColor: 'mediumpurple',
+        backgroundColor: 'green',
         opacity: 1.0,
         alignItems: 'center',
         alignSelf: 'center',
@@ -138,7 +138,7 @@ const myStyles = StyleSheet.create({
     selectButton: {
         // marginVertical: 15,
         // marginHorizontal: 70,
-        backgroundColor: 'mediumpurple',
+        backgroundColor: 'green',
         alignSelf: 'center',
         borderColor: 'goldenrod',
         borderWidth: 2,

@@ -13,15 +13,15 @@ export const ThemeButton = () => {
         };
 
         let myText = 'Dark';
-        let backColor = 'mediumpurple';
+        let backColor = 'green';
         let textColor = 'goldenrod';
         let borderColor = 'goldenrod';
 
             if (themeContext.theme === 'dark') {
             myText = "Light";
             backColor = 'goldenrod';
-            textColor = 'purple';
-            borderColor = 'purple';
+            textColor = 'green';
+            borderColor = 'green';
         }
 
         return (

@@ -11,7 +11,7 @@ export const MyHelpModal = ( {isVisible, onExitPress, screen, parm1} ) => {
             <Modal style={{ margin: 5 }}
                    isVisible={isVisible}
                 // backdropColor={'#AFC0AB'}
-                   backdropColor={'purple'}
+                   backdropColor={'mediumseagreen'}
                    backdropOpacity={.5}
                    onBackdropPress={onExitPress}
                    supportedOrientations={['portrait', 'landscape']}

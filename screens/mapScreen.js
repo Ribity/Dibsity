@@ -1,10 +1,9 @@
 import React from 'react';
-import MapView from 'react-native-maps';
 import {Alert, StyleSheet, View, Dimensions, Image, TouchableOpacity} from 'react-native';
-import * as StoreReview from 'expo-store-review';
 import {SafeAreaView} from "react-navigation";
-import {Button, Layout, Text} from "@ui-kitten/components";
-import {Ionicons} from '@expo/vector-icons';
+import {Layout, Text} from "@ui-kitten/components";
+import MapComponent from '../components/MapComponent';
+
 import Toast from 'react-native-easy-toast';
 import MyDefines from '../constants/MyDefines';
 import myStyles from "../myStyles";
@@ -12,19 +11,21 @@ import {connect} from "react-redux";
 import {bindActionCreators} from "redux";
 import {updateSettings} from "../actions/settingsActions";
 import TasksComponent from '../components/TasksComponent';
+import WaitComponent  from './../components/WaitComponent';
 import myfuncs from "../services/myFuncs";
 import {MyHelpIcon} from "../components/MyHelpIcon";
 import {MyHelpModal} from "../components/MyHelpModal";
-import {ThemeButton} from "../components/themeButton";
+import {LogoComponent} from "../components/LogoComponent";
 import {ScreenTitle} from "../components/screenTitle";
-import {ProfileHeader} from "../components/ProfileHeader";
-import {MyButton} from '../components/MyButton';
 
 let willUnmount = false;
-let dibsityLogo = require('../assets/images/PurpleFace_512x512.png');
+let dibsityLogo = require('../assets/images/DibsityFace_512x512.png');
 
 const {height, width} = Dimensions.get('window');
 const initialState = {
+    welcomeTheUser: true,
+    showInitMessage: true,
+    readyToGo: false,
 };
 
 class MapScreen extends React.Component {
@@ -33,11 +34,9 @@ class MapScreen extends React.Component {
             myfuncs.myBreadCrumbs('navigationOptions', 'MapScreen');
             const { params = {} } = navigation.state;
             return {
-                headerLeft: () => <ProfileHeader profile={params.myProfile}/>,
-                headerTitle: () => <ScreenTitle title={"Map"}
-                                                androidMoveLeft={20}
-                                                // privacy={() => navigation.navigate("Privacy")}
-                />,
+                headerLeft: () => <LogoComponent/>,
+                headerTitle: () => <ScreenTitle title={"Dibsity"}/>,
+
             };
         } catch (error) {
             myfuncs.myRepo(error);
@@ -59,6 +58,13 @@ class MapScreen extends React.Component {
                 this.props.navigation.addListener('willFocus', this.componentWillFocus),
             ];
 
+            setTimeout(() => {
+                this.areWeReadyToGo()
+            }, 100);
+            setTimeout(() => {
+                this.setState({welcomeTheUser: false});
+            }, 8000);
+
             if (MyDefines.log_details)
                 console.log("height:", height, " width:", width, "statusbar:", MyDefines.myStatusBarHeight);
         } catch (error) {
@@ -75,6 +81,20 @@ class MapScreen extends React.Component {
 
         } catch (error) {
             myfuncs.myRepo(error);
+        }
+    };
+    areWeReadyToGo = () => {
+        try {
+            myfuncs.myBreadCrumbs('areWeReadyToGo', this.props.navigation.state.routeName);
+            // if (this.props.tasks.server_info_retrieved) {
+                if (MyDefines.log_details)
+                    console.log("ReadyTOGo");
+                this.setState({readyToGo: true});
+            // } else {
+            //     setTimeout(() => {this.areWeReadyToGo()}, 300);
+            // }
+        } catch (error) {
+            myfuncs.mySentry(error);
         }
     };
 
@@ -120,17 +140,24 @@ class MapScreen extends React.Component {
 
 
             return (
-               <SafeAreaView style={styles.container}>
-                   <Layout style={{flex: 1, alignItems: 'center'}}>
+                <View style={myStyles.container}>
                        <TasksComponent/>
 
-                       <View style={styles.container}>
-                           <MapView style={styles.mapStyle} />
-                       </View>
+                       {this.state.readyToGo === false &&
+                       <WaitComponent/>
+                       }
+
+                       {this.state.readyToGo === true && MyDefines.default_tasks.refresh_map === false &&
+                       <MapComponent navigation={this.props.navigation} />
+                       }
+
+                       {this.state.welcomeTheUser === true &&
+                       <Text style={styles.WelcomeUser}>Welcome</Text>
+                       }
 
                        <Toast
                            ref="toast"
-                           style={{backgroundColor:'mediumpurple',borderRadius: 20,padding: 10}}
+                           style={{backgroundColor:'mediumseagreen',borderRadius: 20,padding: 10}}
                            position='top'
                            positionValue={0}
                            fadeOutDuration={1000}
@@ -143,8 +170,7 @@ class MapScreen extends React.Component {
                        <MyHelpModal screen={"Map"}
                                     onExitPress={this.onHelpExitPress}
                                     isVisible={this.state.isModalVisible}/>
-                   </Layout>
-               </SafeAreaView>
+                </View>
             );
         } catch (error) {
             myfuncs.myRepo(error);
@@ -183,6 +209,16 @@ const styles = StyleSheet.create({
         width: width,
         height: height,
     },
+    WelcomeUser: {
+        position: 'absolute',
+        bottom: (height/2 + height/5 - MyDefines.myStatusBarHeight),
+        fontSize: 22,
+        fontStyle: 'italic',
+        fontWeight: 'bold',
+        opacity: .6,
+        color: 'green',
+    },
+
     dibsityLogo: {
         justifyContent:'center',
         alignItems: 'center',
@@ -194,7 +230,7 @@ const styles = StyleSheet.create({
         fontSize: 25,
         fontWeight: 'bold',
         lineHeight: 25,
-        color: 'mediumpurple',
+        color: 'green',
         marginHorizontal: 20,
         textAlign: 'center'
     },
@@ -211,7 +247,7 @@ const styles = StyleSheet.create({
         lineHeight: 28,
         fontWeight: 'bold',
         // textAlign: 'justify',
-        color: 'mediumpurple',
+        color: 'green',
         marginHorizontal: 5,
         paddingTop: 10,
         fontStyle: 'italic',
@@ -221,7 +257,7 @@ const styles = StyleSheet.create({
         lineHeight: 22,
         fontWeight: 'bold',
         // textAlign: 'justify',
-        color: 'mediumpurple',
+        color: 'green',
         marginHorizontal: 5,
         paddingTop: 10,
         fontStyle: 'italic',

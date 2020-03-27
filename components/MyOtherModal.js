@@ -16,7 +16,7 @@ export const MyOtherModal = ( {isVisible, onExitPress, onOtherPress} ) => {
             <Modal style={{ margin: 5 }}
                    isVisible={isVisible}
                 // backdropColor={'#AFC0AB'}
-                   backdropColor={'mediumpurple'}
+                   backdropColor={'mediumseagreen'}
                    backdropOpacity={.7}
                    onBackdropPress={onExitPress}
                    supportedOrientations={['portrait', 'landscape']}
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     modalButton: {
         marginVertical: 3,
         // marginHorizontal: 70,
-        backgroundColor: 'purple',
+        backgroundColor: 'mediumseagreen',
         alignSelf: 'center',
         borderColor: 'goldenrod',
         borderWidth: 2,
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     ageButton: {
         marginVertical: 3,
         marginHorizontal: 5,
-        backgroundColor: 'purple',
+        backgroundColor: 'mediumseagreen',
         alignSelf: 'center',
         borderColor: 'goldenrod',
         borderWidth: 5,

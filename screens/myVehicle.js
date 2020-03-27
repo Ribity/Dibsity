@@ -129,7 +129,7 @@ class MyVehicleScreen extends React.Component {
 
                         <Toast
                         ref="toast"
-                        style={{backgroundColor:'mediumpurple',borderRadius: 20,padding: 10}}
+                        style={{backgroundColor:'mediumseagreen',borderRadius: 20,padding: 10}}
                         position='top'
                         positionValue={0}
                         fadeOutDuration={1000}
@@ -138,7 +138,7 @@ class MyVehicleScreen extends React.Component {
                         />
                         <Toast
                             ref="toast_bottom"
-                            style={{backgroundColor:'mediumpurple',borderRadius: 20,padding: 10}}
+                            style={{backgroundColor:'mediumseagreen',borderRadius: 20,padding: 10}}
                             position='bottom'
                             positionValue={0}
                             fadeOutDuration={1000}

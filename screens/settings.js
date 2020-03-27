@@ -141,27 +141,27 @@ const styles = StyleSheet.create({
         margin: 6,
     },
     text: {
-        color: 'mediumpurple',
+        color: 'green',
         fontSize: 15,
     },
     textStyle: {
-        color: 'mediumpurple',
+        color: 'green',
 
         fontSize: 20,
         lineHeight: 22,
         alignSelf: 'center',
     },
     labelStyle: {
-        color: 'mediumpurple',
+        color: 'green',
         fontSize: 15,
     },
     controlStyle: {
         borderRadius: 8,
         width: width-30,
-        color: 'mediumpurple',
+        color: 'green',
     },
 
-    buttonText: {textAlign: 'center', color: 'mediumpurple', fontSize: 20, fontWeight: 'bold'},
+    buttonText: {textAlign: 'center', color: 'green', fontSize: 20, fontWeight: 'bold'},
 
 });
 

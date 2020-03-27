@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
     myText: {
         fontSize: 17,
         opacity: 1.0,
-        color: 'purple',
+        color: 'green',
         paddingRight: 5,
     },
     hitSlop: {

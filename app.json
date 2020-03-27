@@ -13,11 +13,11 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "primaryColor": "#008000",
-    "icon": "./assets/images/PurpleFaceIconGold_1024x1024.png",
+    "icon": "./assets/images/DibsityFaceIcon_1024x1024.png",
     "splash": {
-      "image": "./assets/images/PurpleFaceSplash1024.png",
+      "image": "./assets/images/DibsityFaceSplash1024.png",
       "resizeMode": "contain",
-      "backgroundColor": "#daa520"
+      "backgroundColor": "#228b22"
     },
     "updates": {
       "fallbackToCacheTimeout": 30000
@@ -28,21 +28,44 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.dibsity.dibsity",
-      "icon": "./assets/images/PurpleFaceIconGold_1024x1024.png",
-      "appStoreUrl": "https://apps.apple.com/us/app/kibity/id1499289186?ls=1"
+      "icon": "./assets/images/DibsityFaceIcon_1024x1024.png",
+      "appStoreUrl": "https://apps.apple.com/us/app/kibity/id1499289186?ls=1",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Dibsity needs to obtain your current location to show parking on the map. Do you allow Dibsity to use location services on this device when Dibsity is active ?"
+      }
     },
     "android": {
       "package": "com.dibsity.dibsity",
       "versionCode": 1,
-      "icon": "./assets/images/PurpleFaceIconGold_1024x1024.png",
+      "icon": "./assets/images/DibsityFaceIcon_1024x1024.png",
       "playStoreUrl": "https://play.google.com/store/apps/details?id=com.dibsity.dibsity",
-      "permissions": []
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBVYadSjqfKaZ7dhJQ7WE9tQgGL4wNEEHo"
+        }
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
     },
     "androidStatusBarColor": "#000000",
     "androidStatusBar": {
       "barStyle": "light-content",
       "backgroundColor": "#000000"
     },
-    "description": "Inclusive parking app"
+    "description": "Inclusive parking app",
+    "hooks": {
+      "postPublish": [
+        {
+          "file": "sentry-expo/upload-sourcemaps",
+          "config": {
+            "organization": "self-de",
+            "project": "expo-react-native-ribity",
+            "authToken": "0f8d1a459e524d63ba0cbf81f206d10a67ab88a61b514be88c2aac6d70a3ebf2"
+          }
+        }
+      ]
+    }
   }
 }

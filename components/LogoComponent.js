@@ -6,8 +6,8 @@ export const LogoComponent = ( {} ) => {
     try {
         myfuncs.myBreadCrumbs('LogoComponent', 'LogoComponent');
         return (
-            <Image style={styles.kibityImage}
-                   source={require('./../assets/images/PurpleFace_512x512.png')}
+            <Image style={styles.dibsityImage}
+                   source={require('./../assets/images/DibsityFace_512x512.png')}
                    opacity={1.0}
             />
         );
@@ -17,7 +17,7 @@ export const LogoComponent = ( {} ) => {
 };
 
 const styles = StyleSheet.create({
-    kibityImage: {
+    dibsityImage: {
         width: 30,
         height: 30,
     },

@@ -146,7 +146,8 @@ class myFuncs  {
     };
     myRepo = (error) => {
         try {
-            Sentry.captureException(error);
+            if (MyDefines.sentry_logging)
+                Sentry.captureException(error);
         } catch (error) {
             console.log(error);
         }
@@ -197,6 +198,18 @@ class myFuncs  {
             return true;
         else
             return false;
+    };
+    isLocationValid = (locObj) => {
+        try {
+            // this.myBreadCrumbs('isLocationValid', 'MyFuncs');
+
+            if (locObj.timestamp === 0 || typeof locObj.coords === "undefined")
+                return false;
+            else
+                return true;
+        } catch (error) {
+            this.mySentry(error);
+        }
     };
     reviewChosen = async () => {
         await hardStorage.setKey("reviewedApp", true);

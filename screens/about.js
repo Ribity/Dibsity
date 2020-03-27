@@ -75,7 +75,7 @@ export default class AboutScreen extends React.Component {
 const styles = StyleSheet.create({
 
     aboutText: {
-        color: 'mediumpurple',
+        color: 'green',
 
         fontSize: 20,
         lineHeight: 22,

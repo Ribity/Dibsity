@@ -14,7 +14,7 @@ export const MyButton = ( {buttonStyle, textStyle, onPress, title} ) => {
         if (buttonStyle !== undefined && buttonStyle !== null) {
             bStyle = {...bStyle, ...buttonStyle};
         }
-        if (tStyle !== undefined && buttonStyle !== null) {
+        if (textStyle !== undefined && textStyle !== null) {
             tStyle = {...tStyle, ...textStyle};
         }
         return (

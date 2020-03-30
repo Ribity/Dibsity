@@ -6,9 +6,10 @@ import MapView from 'react-native-maps';
 import Constants from 'expo-constants';
 import MyButton from "./MyButton";
 
-// import * as firebase from "firebase";            install firebase
-// import 'firebase/firestore';
-// import {GeoFirestore} from "geofirestore";       install geofirestore and geolib
+import * as firebase from "firebase";
+// import firebase from 'firebase';
+import 'firebase/firestore';
+import {GeoFirestore} from "geofirestore";
 
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -17,7 +18,6 @@ import myfuncs from '../services/myFuncs';
 import MyDefines from '../constants/MyDefines';
 import _ from 'lodash'
 import myStyles from "../myStyles";
-import hardStorage from "../services/deviceStorage";
 
 const GEOLOCATION_OPTIONS = { accuracy: Location.Accuracy.Highest, interval: 1000, enableHighAccuracy: true};
 
@@ -234,7 +234,7 @@ class MapComponent extends React.Component {
     };
 
     check_firestore_listener_distance = () => {
-        let reset_distance_meters = ((MyDefines.default_client_parms.firestore_map_radius_miles * 1.6) / 2) * 1000;
+        let reset_distance_meters = MyDefines.default_tasks.firestore_radius_meters / 2;
         let location = this.props.location;
         if (MyDefines.fakeLocation === true)
             location = this.fakeLocation;
@@ -260,14 +260,70 @@ class MapComponent extends React.Component {
     addGeoFirestoreListeners() {
         try {
             myfuncs.myBreadCrumbs('addGeoFirestoreListeners', this.props.navigation.state.routeName);
+            const firestore= firebase.firestore();
+            const kilometers = MyDefines.default_tasks.firestore_radius_meters / 1000;
+
+            let location = this.props.location;
+            if (MyDefines.fakeLocation === true)
+                location = this.fakeLocation;
+
+            console.log("Adding firestore query for ", kilometers, "kilometers");
+
+
+            const geoFirestore = new GeoFirestore(firestore);
+            console.log("mk1aa " + geoFirestore);
+
+            const geoCollectionRef = geoFirestore.collection('ribbons');
+
+            console.log("mk1ab");
+
+            if (this.geoSubscription) {
+                console.log('canceling old geoSubscription');
+                this.geoSubscription();
+                this.geoSubscription = false;
+            }
+
+            firestoreListenerLocation = _.cloneDeep(location);
+
+            let query = geoCollectionRef.near({
+                center: new firebase.firestore.GeoPoint(location.coords.latitude,
+                    location.coords.longitude),
+                radius: kilometers,  // Radius is kilometers.  .6 would be 600 meters
+            });
+            this.geoSubscription = query.onSnapshot((snapshot) => {
+                console.log(snapshot.docChanges());
+                snapshot.docChanges().forEach((change) => {
+                    switch (change.type) {
+                        case 'added':
+                            console.log("New firestore key_entered", change.doc.data());
+                            this.addSpace(change.doc.id, change.doc.data());
+                            console.log("New firestore key_entered done");
+                            break;
+                        case 'modified':
+                            console.log("New firestore key_moved", change.doc.data());
+                            this.removeSpace(change.doc.id);
+                            this.addSpace(change.doc.id, change.doc.data());
+                            console.log("New firestore key_moved done");
+                            break;
+                        case 'removed':
+                            console.log("firestore key_exited", change.doc.id);
+                            this.removeSpace(change.doc.id);
+                            console.log("New firestore key_exited done");
+                            break;
+                        default:
+                            break;
+                    }
+                });
+            });
+            console.log("Firestore listeners added");
 
 
 
-            // ****  See Ribity for this !!  *******  mk1
 
 
 
         } catch (error) {
+            console.log("catch geoFirestoreListener: " + error);
             myfuncs.myRepo(error);
         }
     }
@@ -275,41 +331,14 @@ class MapComponent extends React.Component {
         try {
             myfuncs.myBreadCrumbs('addSpace', this.props.navigation.state.routeName);
             let newSpace = {};
+            console.log("addSpace: ", rcd);
             newSpace.key = id;
             newSpace.id = rcd.id;
-            newSpace.bearing = rcd.bearing;
-            newSpace.bearing_desc = rcd.bearing_desc;
-            newSpace.name = rcd.name;
-            newSpace.creator_id = rcd.creator_id;
-            newSpace.public_message = rcd.public_message;
             newSpace.latitude = rcd.coordinates.latitude;
             newSpace.longitude = rcd.coordinates.longitude;
-            newSpace.end_address = rcd.end_address;
-            newSpace.history = {};     // Added this for now so RibbonHistory doesn't throw an exception when it's the active MyRibbon screen
             if (!myfuncs.isEmpty(rcd.timestamp)) {
-                // console.log("addMarker: ", rcd);
-                let spaceDate = rcd.timestamp.toDate();
-                let todayDate = new Date();
-                newSpace.diffDays = Math.round((todayDate - spaceDate) / _MS_PER_DAY, 0);
-                if (newSpace.diffDays > 30)
-                    newSpace.diffDays *= 10;
-                else if (newSpace.diffDays > 25)
-                    newSpace.diffDays *= 9;
-                else if (newSpace.diffDays > 20)
-                    newSpace.diffDays *= 8;
-                else if (newSpace.diffDays > 15)
-                    newSpace.diffDays *= 7;
-                else if (newSpace.diffDays > 10)
-                    newSpace.diffDays *= 5;
-                else if (newSpace.diffDays > 5)
-                    newSpace.diffDays *= 3;
-                else if (newSpace.diffDays > 3)
-                    newSpace.diffDays *= 2;
-                // console.log("diffDays: ", newSpace.diffDays);
-            } else {
-                newSpace.diffDays = 0;
+                console.log("addSpace timeStamp true");
             }
-            this.setNewMarkerImage(rcd, newSpace);
             newSpace.image = parkingSpotImage;
 
             let joined = this.state.spaces.concat(newSpace);

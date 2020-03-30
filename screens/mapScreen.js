@@ -17,6 +17,20 @@ import {MyHelpIcon} from "../components/MyHelpIcon";
 import {MyHelpModal} from "../components/MyHelpModal";
 import {LogoComponent} from "../components/LogoComponent";
 import {ScreenTitle} from "../components/screenTitle";
+import ApiKeys from "../constants/ApiKeys";
+import * as firebase from "firebase";
+import 'firebase/firestore';
+
+import { decode, encode } from 'base-64'
+import {ParkedIcon} from "../components/ParkedIcon";
+import {MyButton} from "../components/MyButton";
+global.crypto = require("@firebase/firestore");
+global.crypto.getRandomValues = byteArray => { for (let i = 0; i < byteArray.length; i++) { byteArray[i] = Math.floor(256 * Math.random()); } }
+
+if (!global.btoa) { global.btoa = encode; }
+
+if (!global.atob) { global.atob = decode; }
+
 
 let willUnmount = false;
 let dibsityLogo = require('../assets/images/DibsityFace_512x512.png');
@@ -26,6 +40,7 @@ const initialState = {
     welcomeTheUser: true,
     showInitMessage: true,
     readyToGo: false,
+    isAuthenticated: false,
 };
 
 class MapScreen extends React.Component {
@@ -71,10 +86,16 @@ class MapScreen extends React.Component {
             myfuncs.myRepo(error);
         }
     }
+    componentWillUnmount() {
+        if (this.onAuthStateChangedUnsubscribe)
+            this.onAuthStateChangedUnsubscribe();
+    }
     getUserStoredData = async () => {
         try {
             myfuncs.myBreadCrumbs('getUserStoredData', this.props.navigation.state.routeName);
             let retObj = await myfuncs.init();
+
+            await this.initFirebase();
 
             await this.props.updateSettings(retObj.settings);
             myfuncs.setAwakeorNot(this.props.settings.keep_awake);
@@ -83,21 +104,67 @@ class MapScreen extends React.Component {
             myfuncs.myRepo(error);
         }
     };
+    initFirebase = async () => {
+        try {
+            let fbConfig;
+
+            fbConfig = ApiKeys.FirebaseConfig;
+            if (!firebase.apps.length) {
+                console.log("initializing firebase");
+                let app = await firebase.initializeApp(fbConfig);
+            }
+            // this.onAuthStateChangedUnsubscribe = firebase.auth().onAuthStateChanged(this.onAuthStateChanged);
+            // this.signInAnonymously();
+            // this.storeHighScore(2, 1001);
+            this.setState({isAuthenticated: true});
+
+        } catch (error) {
+            myfuncs.myRepo(error);
+        }
+    };
+    // signInAnonymously = () => {
+    //     try {
+    //         firebase.auth().signInAnonymously();
+    //     } catch (error) {
+    //         myfuncs.myRepo(error);
+    //     }
+    // };
+    // storeHighScore = (userId, score) => {
+    //     try {
+    //         console.log("set user highScore");
+    //
+    //         const dbh = firebase.firestore();
+    //
+    //         dbh.collection("characters").doc("mario").set({
+    //             employment: "plumber",
+    //             outfitColor: "blue",
+    //             specialAttack: "fireball"
+    //         })
+    //     } catch (error) {
+    //         myfuncs.myRepo(error);
+    //     }
+    // };
+    // onAuthStateChanged = (user) => {
+    //     // this.setState({isAuthenticationReady: true});
+    //     if (MyDefines.log_details)
+    //         console.log("on Firebase Auth State changed: ", user);
+    //     this.setState({isAuthenticated: !!user});
+    //     this.storeHighScore(2, 1001);
+    // };
     areWeReadyToGo = () => {
         try {
             myfuncs.myBreadCrumbs('areWeReadyToGo', this.props.navigation.state.routeName);
-            // if (this.props.tasks.server_info_retrieved) {
+            if (this.state.isAuthenticated) {
                 if (MyDefines.log_details)
                     console.log("ReadyTOGo");
                 this.setState({readyToGo: true});
-            // } else {
-            //     setTimeout(() => {this.areWeReadyToGo()}, 300);
-            // }
+            } else {
+                setTimeout(() => {this.areWeReadyToGo()}, 300);
+            }
         } catch (error) {
-            myfuncs.mySentry(error);
+            myfuncs.myRepo(error);
         }
     };
-
     static getDerivedStateFromProps(nextProps, prevState){
         try {
             myfuncs.myBreadCrumbs('getDerivedStateFromProps', "MapScreen");
@@ -133,6 +200,9 @@ class MapScreen extends React.Component {
             myfuncs.myRepo(error);
         }
     };
+    saveParkedLocation = () => {
+        console.log("save parked button pressed");
+    };
 
     render() {
         try {
@@ -146,10 +216,12 @@ class MapScreen extends React.Component {
                        {this.state.readyToGo === false &&
                        <WaitComponent/>
                        }
-
-                       {this.state.readyToGo === true && MyDefines.default_tasks.refresh_map === false &&
-                       <MapComponent navigation={this.props.navigation} />
-                       }
+                        {(this.state.readyToGo === true && MyDefines.default_tasks.refresh_map === false) &&
+                        <MapComponent navigation={this.props.navigation}/>
+                        }
+                        {(this.state.readyToGo === true && MyDefines.default_tasks.refresh_map === false) &&
+                        <ParkedIcon onPress={this.saveParkedLocation} />
+                        }
 
                        {this.state.welcomeTheUser === true &&
                        <Text style={styles.WelcomeUser}>Welcome</Text>
@@ -165,7 +237,6 @@ class MapScreen extends React.Component {
                            textStyle={{color:'gold',fontSize:21}}
                        />
 
-
                        <MyHelpIcon onPress={this.onHelpPress}/>
                        <MyHelpModal screen={"Map"}
                                     onExitPress={this.onHelpExitPress}
@@ -176,7 +247,11 @@ class MapScreen extends React.Component {
             myfuncs.myRepo(error);
         }
     }
-    onHelpPress = () => {
+//{(this.state.readyToGo === true && MyDefines.default_tasks.refresh_map === false) &&
+//<MapComponent navigation={this.props.navigation}/>
+//}
+
+onHelpPress = () => {
         try {
             myfuncs.myBreadCrumbs('onHelpPress', this.props.navigation.state.routeName);
             this.setState({isModalVisible: true});

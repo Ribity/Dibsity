@@ -5,6 +5,7 @@ import MyDefines from '../constants/MyDefines';
 import { Audio } from 'expo-av';
 import * as Localization from 'expo-localization';
 import ApiKeys from '../constants/ApiKeys';
+import * as geolib from "geolib";
 import * as Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import { activateKeepAwake, deactivateKeepAwake } from 'expo-keep-awake';
@@ -15,14 +16,14 @@ let bSoundsAreLoaded = false;
 let bSoundIsPlaying = false;
 
 class myFuncs  {
-
     init = async () => {
         let settings = MyDefines.default_settings;
         let new_user = false;
         try {
             this.initRepo();
-
             this.myBreadCrumbs('init', "myfuncs");
+
+            // this.initFirebase();
 
             if (MyDefines.clearAllStorage === true)
                 await hardStorage.clearAll();
@@ -87,6 +88,7 @@ class myFuncs  {
             this.myRepo(error);
         }
     };
+
     initRepo = () => {
         try {
             Sentry.init({
@@ -148,6 +150,8 @@ class myFuncs  {
         try {
             if (MyDefines.sentry_logging)
                 Sentry.captureException(error);
+            else
+                console.log(error);
         } catch (error) {
             console.log(error);
         }
@@ -210,6 +214,19 @@ class myFuncs  {
         } catch (error) {
             this.mySentry(error);
         }
+    };
+    calcDistance = (coord1, coord2) => {
+        let distance = geolib.getDistance(
+            {
+                "latitude": coord1.latitude,
+                "longitude": coord1.longitude
+            },
+            {
+                "latitude": coord2.latitude,
+                "longitude": coord2.longitude
+            },
+            1);
+        return distance;
     };
     reviewChosen = async () => {
         await hardStorage.setKey("reviewedApp", true);

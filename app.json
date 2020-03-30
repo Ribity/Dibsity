@@ -39,11 +39,6 @@
       "versionCode": 1,
       "icon": "./assets/images/DibsityFaceIcon_1024x1024.png",
       "playStoreUrl": "https://play.google.com/store/apps/details?id=com.dibsity.dibsity",
-      "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyBVYadSjqfKaZ7dhJQ7WE9tQgGL4wNEEHo"
-        }
-      },
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
@@ -61,8 +56,7 @@
           "file": "sentry-expo/upload-sourcemaps",
           "config": {
             "organization": "self-de",
-            "project": "expo-react-native-ribity",
-            "authToken": "0f8d1a459e524d63ba0cbf81f206d10a67ab88a61b514be88c2aac6d70a3ebf2"
+            "project": "expo-react-native-ribity"
           }
         }
       ]

@@ -207,12 +207,12 @@ class myFuncs  {
         try {
             // this.myBreadCrumbs('isLocationValid', 'MyFuncs');
 
-            if (locObj.timestamp === 0 || typeof locObj.coords === "undefined")
+            if (locObj === null || locObj === undefined || typeof locObj.coords === "undefined")
                 return false;
             else
                 return true;
         } catch (error) {
-            this.mySentry(error);
+            this.myRepo(error);
         }
     };
     calcDistance = (coord1, coord2) => {
@@ -256,7 +256,29 @@ class myFuncs  {
             }
         }
         return numPlayed;
-    }
+    };
+    getTenMinuteInterval = () => {
+        let baseDate = new Date(2020, 2, 31, 0, 0);
+        let currDate = new Date();
+
+        let tenMinutes = (currDate - baseDate) / (1000 *  60 * 10 );
+        return Math.floor(tenMinutes);
+    };
+    getOneMinuteInterval = () => {
+        let baseDate = new Date(2020, 2, 31, 0, 0);
+        let currDate = new Date();
+
+        let oneMinutes = (currDate - baseDate) / (1000 *  60);
+        return Math.floor(oneMinutes);
+    };
+    clone = (obj) => {
+        if (null == obj || "object" != typeof obj) return obj;
+        let copy = obj.constructor();
+        for (let attr in obj) {
+            if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
+        }
+        return copy;
+    };
 }
 
 const myfuncs = new myFuncs();

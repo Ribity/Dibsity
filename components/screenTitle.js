@@ -33,7 +33,7 @@ export const ScreenTitle = ( {title, second, privacy}) => {
             </View>
         );
     } catch (error) {
-        myfuncs.mySentry(error);
+        myfuncs.myRepo(error);
     }
 };
 

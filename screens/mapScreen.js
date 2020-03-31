@@ -20,10 +20,13 @@ import {ScreenTitle} from "../components/screenTitle";
 import ApiKeys from "../constants/ApiKeys";
 import * as firebase from "firebase";
 import 'firebase/firestore';
+import {GeoCollectionReference, GeoFirestore} from "geofirestore";
 
 import { decode, encode } from 'base-64'
-import {ParkedIcon} from "../components/ParkedIcon";
+import {SaveParkedIcon} from "../components/SaveParkedIcon";
+import {DepartParkedIcon} from "../components/DepartParkedIcon";
 import {MyButton} from "../components/MyButton";
+import * as Constants from "expo-constants";
 global.crypto = require("@firebase/firestore");
 global.crypto.getRandomValues = byteArray => { for (let i = 0; i < byteArray.length; i++) { byteArray[i] = Math.floor(256 * Math.random()); } }
 
@@ -33,7 +36,8 @@ if (!global.atob) { global.atob = decode; }
 
 
 let willUnmount = false;
-let dibsityLogo = require('../assets/images/DibsityFace_512x512.png');
+let myfirestore = null;
+let mySavedParkingLocation = null;
 
 const {height, width} = Dimensions.get('window');
 const initialState = {
@@ -41,6 +45,7 @@ const initialState = {
     showInitMessage: true,
     readyToGo: false,
     isAuthenticated: false,
+    userSavedParkingLocation: false,
 };
 
 class MapScreen extends React.Component {
@@ -113,6 +118,8 @@ class MapScreen extends React.Component {
                 console.log("initializing firebase");
                 let app = await firebase.initializeApp(fbConfig);
             }
+            myfirestore = firebase.firestore();
+
             // this.onAuthStateChangedUnsubscribe = firebase.auth().onAuthStateChanged(this.onAuthStateChanged);
             // this.signInAnonymously();
             // this.storeHighScore(2, 1001);
@@ -200,14 +207,66 @@ class MapScreen extends React.Component {
             myfuncs.myRepo(error);
         }
     };
+    departingParkedLocation = () => {
+        try {
+            myfuncs.myBreadCrumbs('departingParkedLocation', this.props.navigation.state.routeName);
+
+            let tenMins = myfuncs.getTenMinuteInterval();
+            // let tenMins = myfuncs.getOneMinuteInterval();
+            let geofirestore = new GeoFirestore(myfirestore);
+            let geocollection = geofirestore.collection('departing').doc("tenMinuteIntervals").collection(tenMins.toString());
+
+            console.log("save parked button pressed: ", tenMins);
+
+            // geocollection.add({     // This let's the database create a unique record, or I create unique record below
+            let uniqueKey = Constants.default.deviceId;
+            let myTemp = geocollection.doc(uniqueKey).set({
+
+                name: 'KingRcd',
+                score: 100,
+                // coordinates: new firebase.firestore.GeoPoint(38,38)
+                coordinates: new firebase.firestore.GeoPoint(this.props.location.coords.latitude, this.props.location.coords.longitude)
+            });
+
+        } catch (error) {
+            myfuncs.myRepo(error);
+        }
+    };
+    parkedLocation = () => {
+        try {
+            myfuncs.myBreadCrumbs('parkedLocation', this.props.navigation.state.routeName);
+
+            console.log("user clicked save parking location");
+            Alert.alert("Are you at the exact location where your vehicle is parked?",
+                "If not, please remember to save your location the next time you park.",
+                [
+                    {text: 'No'},
+                    {text: 'Yes', onPress: () => {this.saveParkedLocation()}},
+                ]);
+        } catch (error) {
+            myfuncs.myRepo(error);
+        }
+    };
     saveParkedLocation = () => {
-        console.log("save parked button pressed");
+        try {
+            myfuncs.myBreadCrumbs('saveParkedLocation', this.props.navigation.state.routeName);
+
+            console.log("Saving parking location");
+
+            mySavedParkingLocation = myfuncs.clone(this.props.location);
+            this.setState({userSavedParkingLocation: true});
+            myfuncs.writeUserDataToLocalStorage("parkedLocation", this.props.location);
+            this.refs.toast.show("Parking Location Saved", 3000);
+            this.refs.toastCenter.show("Parking Location Saved", 3000);
+
+        } catch (error) {
+            myfuncs.myRepo(error);
+        }
     };
 
     render() {
         try {
             myfuncs.myBreadCrumbs('render', this.props.navigation.state.routeName);
-
 
             return (
                 <View style={myStyles.container}>
@@ -220,7 +279,12 @@ class MapScreen extends React.Component {
                         <MapComponent navigation={this.props.navigation}/>
                         }
                         {(this.state.readyToGo === true && MyDefines.default_tasks.refresh_map === false) &&
-                        <ParkedIcon onPress={this.saveParkedLocation} />
+                        <SaveParkedIcon onPress={this.parkedLocation} />
+                        }
+                        {(this.state.readyToGo === true &&
+                            MyDefines.default_tasks.refresh_map === false &&
+                            this.state.userSavedParkingLocation) &&
+                        <DepartParkedIcon onPress={this.departingParkedLocation} />
                         }
 
                        {this.state.welcomeTheUser === true &&
@@ -229,13 +293,22 @@ class MapScreen extends React.Component {
 
                        <Toast
                            ref="toast"
-                           style={{backgroundColor:'mediumseagreen',borderRadius: 20,padding: 10}}
+                           style={{backgroundColor:'gold',borderRadius: 20,padding: 10}}
                            position='top'
                            positionValue={0}
                            fadeOutDuration={1000}
                            opacity={.9}
-                           textStyle={{color:'gold',fontSize:21}}
+                           textStyle={{color:'black',fontSize:21}}
                        />
+                        <Toast
+                            ref="toastCenter"
+                            style={{backgroundColor:'gold',borderRadius: 20,padding: 10}}
+                            position='center'
+                            positionValue={0}
+                            fadeOutDuration={1000}
+                            opacity={.9}
+                            textStyle={{color:'black',fontSize:21}}
+                        />
 
                        <MyHelpIcon onPress={this.onHelpPress}/>
                        <MyHelpModal screen={"Map"}
@@ -267,23 +340,8 @@ onHelpPress = () => {
             myfuncs.myRepo(error);
         }
     };
-    showToast = () => {
-        this.refs.toast.show("We encourage you to write a story and send to:" +
-            "\r\n\nStories@dibsity.com.com " +
-            "\r\n\nWe will publish it on Dibsity and contact you when it is added to the Dibsity list of Write-In stories.", 2000);
-    };
 };
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: MyDefines.myTabColor,
-
-        // backgroundColor: 'white',
-    },
-    mapStyle: {
-        width: width,
-        height: height,
-    },
     WelcomeUser: {
         position: 'absolute',
         bottom: (height/2 + height/5 - MyDefines.myStatusBarHeight),
@@ -293,55 +351,12 @@ const styles = StyleSheet.create({
         opacity: .6,
         color: 'green',
     },
-
-    dibsityLogo: {
-        justifyContent:'center',
-        alignItems: 'center',
-        alignSelf: 'center',
-        width: 40,
-        height: 40,
-    },
-    welcomeUser: {
-        fontSize: 25,
-        fontWeight: 'bold',
-        lineHeight: 25,
-        color: 'green',
-        marginHorizontal: 20,
-        textAlign: 'center'
-    },
-    bottom: {
-        // position: 'absolute',
-        // flexDirection: 'row',
-        alignItems: 'center',
-        // bottom: (MyDefines.myBottomTabBarHeight),
-        marginBottom: 10,
-    },
-
-    bigText: {
-        fontSize: 26,
-        lineHeight: 28,
-        fontWeight: 'bold',
-        // textAlign: 'justify',
-        color: 'green',
-        marginHorizontal: 5,
-        paddingTop: 10,
-        fontStyle: 'italic',
-    },
-    smallText: {
-        fontSize: 20,
-        lineHeight: 22,
-        fontWeight: 'bold',
-        // textAlign: 'justify',
-        color: 'green',
-        marginHorizontal: 5,
-        paddingTop: 10,
-        fontStyle: 'italic',
-    },
 });
 
 const mapStateToProps = (state) => {
     const { settings } = state;
-    return { settings }
+    const { location } = state;
+    return { settings, location }
 };
 const mapDispatchToProps = dispatch => (
     bindActionCreators({

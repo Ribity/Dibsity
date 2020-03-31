@@ -66,7 +66,7 @@ class MapComponent extends React.Component {
             this.componentWillUnmount = this.componentWillUnmount.bind(this);
 
         } catch (error) {
-            myfuncs.mySentry(error);
+            myfuncs.myRepo(error);
         }
     };
 

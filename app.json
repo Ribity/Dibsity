@@ -56,7 +56,8 @@
           "file": "sentry-expo/upload-sourcemaps",
           "config": {
             "organization": "self-de",
-            "project": "expo-react-native-ribity"
+            "project": "expo-react-native-ribity",
+            "authToken": "0f8d1a459e524d63ba0cbf81f206d10a67ab88a61b514be88c2aac6d70a3ebf2"
           }
         }
       ]

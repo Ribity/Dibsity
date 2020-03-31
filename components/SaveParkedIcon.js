@@ -2,9 +2,9 @@ import React from 'react';
 import {TouchableOpacity, StyleSheet, Text, View} from 'react-native';
 import myfuncs from "../services/myFuncs";
 
-export const ParkedIcon = ( {onPress} ) => {
+export const SaveParkedIcon = ({onPress} ) => {
     try {
-        myfuncs.myBreadCrumbs('ParkedIcon', 'ParkedIcon');
+        myfuncs.myBreadCrumbs('SaveParkedIcon', 'SaveParkedIcon');
 
         return (
             <TouchableOpacity style={styles.floatingParkedIcon}

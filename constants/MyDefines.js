@@ -32,7 +32,7 @@ export default {
         refresh_map: false,
         panned_map: false,
         panned_coords: {},
-        firestore_radius_meters: 1500,
+        firestore_radius_meters: 3000,
     },
     default_location: {
         "coords": {

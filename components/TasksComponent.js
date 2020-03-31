@@ -66,21 +66,11 @@ class TasksComponent extends React.Component {
             myfuncs.myRepo(error);
         }
     };
-
-    clone = (obj) => {
-        if (null == obj || "object" != typeof obj) return obj;
-        let copy = obj.constructor();
-        for (let attr in obj) {
-            if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
-        }
-        return copy;
-    };
     sixtyMinuteTask = () => {
         try {
             myfuncs.myBreadCrumbs('sixtyMinuteTask', "TasksComponent");
             if (MyDefines.detail_logging)
                 console.log("sixtyMinuteTask");
-            this.getStoryListFromServer();
         } catch (error) {
             myfuncs.myRepo(error);
         }

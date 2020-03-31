@@ -3,6 +3,7 @@ import settingsReducer from './SettingsReducer'
 import vehicleReducer from './VehicleReducer'
 import fakeLocationsReducer from './FakeLocationsReducer'
 import locationReducer from './LocationReducer'
+import parkedLocationReducer from './ParkedLocationReducer'
 import tasksReducer from './TasksReducer'
 
 export const rootReducer = combineReducers({
@@ -10,6 +11,7 @@ export const rootReducer = combineReducers({
     vehicle: vehicleReducer,
 
     location: locationReducer,
+    parkedLocation: parkedLocationReducer,
     tasks: tasksReducer,
     fakeLocations: fakeLocationsReducer,
 

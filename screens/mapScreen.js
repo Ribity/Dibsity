@@ -10,6 +10,7 @@ import myStyles from "../myStyles";
 import {connect} from "react-redux";
 import {bindActionCreators} from "redux";
 import {updateSettings} from "../actions/settingsActions";
+import {updateParkedLocation} from "../actions/ParkedLocationActions";
 import TasksComponent from '../components/TasksComponent';
 import WaitComponent  from './../components/WaitComponent';
 import myfuncs from "../services/myFuncs";
@@ -37,7 +38,6 @@ if (!global.atob) { global.atob = decode; }
 
 let willUnmount = false;
 let myfirestore = null;
-let mySavedParkingLocation = null;
 
 const {height, width} = Dimensions.get('window');
 const initialState = {
@@ -100,10 +100,15 @@ class MapScreen extends React.Component {
             myfuncs.myBreadCrumbs('getUserStoredData', this.props.navigation.state.routeName);
             let retObj = await myfuncs.init();
 
-            await this.initFirebase();
+            if (myfuncs.isLocationValid(retObj.parkedLocation)) {
+                this.props.updateParkedLocation(retObj.parkedLocation);
+                this.setState({userSavedParkingLocation: true});
+            }
 
             await this.props.updateSettings(retObj.settings);
             myfuncs.setAwakeorNot(this.props.settings.keep_awake);
+
+            await this.initFirebase();
 
         } catch (error) {
             myfuncs.myRepo(error);
@@ -214,7 +219,8 @@ class MapScreen extends React.Component {
             let tenMins = myfuncs.getTenMinuteInterval();
             // let tenMins = myfuncs.getOneMinuteInterval();
             let geofirestore = new GeoFirestore(myfirestore);
-            let geocollection = geofirestore.collection('departing').doc("tenMinuteIntervals").collection(tenMins.toString());
+            let geocollection = geofirestore.collection(ApiKeys.firebase_collection).
+                                doc(ApiKeys.firebase_doc).collection(tenMins.toString());
 
             console.log("save parked button pressed: ", tenMins);
 
@@ -222,7 +228,7 @@ class MapScreen extends React.Component {
             let uniqueKey = Constants.default.deviceId;
             let myTemp = geocollection.doc(uniqueKey).set({
 
-                name: 'KingRcd',
+                name: 'KingRcd2',
                 score: 100,
                 // coordinates: new firebase.firestore.GeoPoint(38,38)
                 coordinates: new firebase.firestore.GeoPoint(this.props.location.coords.latitude, this.props.location.coords.longitude)
@@ -253,7 +259,7 @@ class MapScreen extends React.Component {
 
             console.log("Saving parking location");
 
-            mySavedParkingLocation = myfuncs.clone(this.props.location);
+            this.props.updateParkedLocation(this.props.location);
             this.setState({userSavedParkingLocation: true});
             myfuncs.writeUserDataToLocalStorage("parkedLocation", this.props.location);
             this.refs.toast.show("Parking Location Saved", 3000);
@@ -361,6 +367,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = dispatch => (
     bindActionCreators({
         updateSettings,
+        updateParkedLocation,
     }, dispatch)
 );
 export default connect(mapStateToProps, mapDispatchToProps)(MapScreen);

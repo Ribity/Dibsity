@@ -166,7 +166,7 @@ class MapComponent extends React.Component {
                 if (MyDefines.default_user.profile.map_orients_to_users_bearing === 2) // If orients to users bearing
                     heading = this.props.location.coords.heading;
 
-                if ( this.map !=null ) {    // Added the IF because I had one exception in sentry:  undefined is not an object (evaluating 'u.map.animateCamera'). I think this got called before it rendered the map
+                if ( this.map !=null ) {    // Added the IF because I had one exception in myRepo:  undefined is not an object (evaluating 'u.map.animateCamera'). I think this got called before it rendered the map
                     this.map.animateCamera(
                         {
                             center: region,
@@ -614,7 +614,7 @@ class MapComponent extends React.Component {
                 );
             } catch (error) {
                 if (error instanceof ReferenceError)
-                    console.log("MapComponent referenceError. Probably Image issue. Don't send to Sentry");
+                    console.log("MapComponent referenceError. Probably Image issue. Don't send to myRepo");
                 else
                     myfuncs.myRepo(error);
             }

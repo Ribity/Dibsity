@@ -51,6 +51,7 @@ class MapComponent extends React.Component {
                 hasLocationPermissions: false,
                 locationResult: null,
                 spaces: [],
+                parkedLocation: null,
 
                 bearing: 0,
                 initRegion: null,
@@ -97,6 +98,7 @@ class MapComponent extends React.Component {
                 },
             };
             this.fakeCount = 0;
+            this.setState({parkedLocation: this.props.parkedLocation});
 
         } catch (error) {
             myfuncs.myRepo(error);
@@ -166,7 +168,7 @@ class MapComponent extends React.Component {
                 if (MyDefines.default_user.profile.map_orients_to_users_bearing === 2) // If orients to users bearing
                     heading = this.props.location.coords.heading;
 
-                if ( this.map !=null ) {    // Added the IF because I had one exception in sentry:  undefined is not an object (evaluating 'u.map.animateCamera'). I think this got called before it rendered the map
+                if ( this.map !=null ) {    // Added the IF because I had one exception in myRepo:  undefined is not an object (evaluating 'u.map.animateCamera'). I think this got called before it rendered the map
                     this.map.animateCamera(
                         {
                             center: region,
@@ -232,7 +234,24 @@ class MapComponent extends React.Component {
 
         setTimeout(this.fakeLocationChange, MyDefines.fakeSeconds * 1000);
     };
-
+    static getDerivedStateFromProps(nextProps, prevState){
+        try {
+            myfuncs.myBreadCrumbs('getDerivedStateFromProps', "MapComponent");
+            console.log("MapComponenet GetDerivedStateFromProps");
+            let update = {};
+            if (prevState.parkedLocation !== nextProps.parkedLocation) {
+                console.log("MapComponenet GetDerivedStateFromProps new parkedLocationa: ", nextProps.parkedLocation);
+                update.parkedLocation = nextProps.parkedLocation;
+            }
+            // if (prevState.profiles !== nextProps.profiles) {
+            //     update.profiles = nextProps.profiles;
+            // }
+            return Object.keys(update).length ? update: null;
+        } catch (error) {
+            myfuncs.myRepo(error);
+            return null;
+        }
+    };
     check_firestore_listener_distance = () => {
         let reset_distance_meters = MyDefines.default_tasks.firestore_radius_meters / 2;
         let location = this.props.location;
@@ -502,6 +521,9 @@ class MapComponent extends React.Component {
             myfuncs.myRepo(error);
         }
     };
+    onPressParked = () => {
+        console.log("Press Parked");
+    };
     onPressSpace = (space) => {
         try {
             myfuncs.myBreadCrumbs('onPressMarker', this.props.navigation.state.routeName);
@@ -564,6 +586,9 @@ class MapComponent extends React.Component {
             rWidth  *= MyDefines.default_user.profile.map_user_size;
             rHeight *= MyDefines.default_user.profile.map_user_size;
 
+            if (myfuncs.isLocationValid(this.state.parkedLocation))
+                console.log("parked;", this.state.parkedLocation);
+
                 return (
                 this.state.locationResult === null ?
                     <View>
@@ -620,6 +645,22 @@ class MapComponent extends React.Component {
                             ))}
 
 
+                            {myfuncs.isLocationValid(this.state.parkedLocation) &&
+                                <MapView.Marker
+                                    coordinate={{
+                                        longitude: this.state.parkedLocation.coords.longitude,
+                                        latitude: this.state.parkedLocation.coords.latitude
+                                    }}
+                                    title={"Marker"}
+                                    description={"(Headed:)  "}
+                                >
+                                    <Image source={userIcon2w}
+                                           style={{height: rHeight, width: rWidth, zIndex: 4}}
+                                    />
+                                </MapView.Marker>
+                            }
+
+
                             <MapView.Marker.Animated
                                 coordinate={this.state.coordinate}
                                 style={{
@@ -643,7 +684,7 @@ class MapComponent extends React.Component {
                 );
             } catch (error) {
                 if (error instanceof ReferenceError)
-                    console.log("MapComponent referenceError. Probably Image issue. Don't send to Sentry");
+                    console.log("MapComponent referenceError. Probably Image issue. Don't send to myRepo");
                 else
                     myfuncs.myRepo(error);
             }

@@ -18,28 +18,31 @@ let bSoundIsPlaying = false;
 class myFuncs  {
     init = async () => {
         let settings = MyDefines.default_settings;
+        let parkedLocation = null;
         let new_user = false;
         try {
             this.initRepo();
             this.myBreadCrumbs('init', "myfuncs");
-
-            // this.initFirebase();
 
             if (MyDefines.clearAllStorage === true)
                 await hardStorage.clearAll();
 
             new_user = await this.check_new_user();
 
-            let retObj = await this.getUserSettingsFromLocalStorage();
-
-            settings = {...settings, ...retObj.settings};
+            let user_settings = await hardStorage.getKey("user_settings");
+            if (user_settings !== null) {
+                settings = {...settings, ...user_settings};
+                if (MyDefines.log_details)
+                    console.log("Successfully retrieved settings from Storage:", settings)
+            }
+            parkedLocation = await hardStorage.getKey("parkedLocation");
 
             // console.log("init after");
 
         } catch (error) {
             this.myRepo(error);
         }
-        return {settings: settings, new_user: new_user};
+        return {settings: settings, new_user: new_user, parkedLocation: parkedLocation};
     };
     check_new_user = async () => {
         let new_user = false;
@@ -57,24 +60,7 @@ class myFuncs  {
         }
         return new_user;
     };
-    getUserSettingsFromLocalStorage = async () => {
-        let settings = MyDefines.default_settings;
-        try {
-            this.myBreadCrumbs('getUserSettingsFromLocalStorage', "myfuncs");
-            let user_settings = await hardStorage.getKey("user_settings");
-            if (user_settings !== null) {
-                settings = {...settings, ...user_settings};
-                if (MyDefines.log_details)
-                    console.log("Successfully retrieved settings from Storage:", settings)
-            }
-        } catch (error) {
-            this.myRepo(error);
-        }
-        // console.log("settingsFromStorage:", settings);
-        // console.log("profilesFromStorage:", profiles);
-        settings.retrieved_user_data = true;
-        return {settings: settings};
-    };
+
     writeUserDataToLocalStorage = async (key, data) => {
         try {
             this.myBreadCrumbs('writeUserDataToLocalStorage', "myfuncs");
@@ -142,13 +128,13 @@ class myFuncs  {
                 });
             });
         } catch (error) {
-            console.log("Send Sentry");
+            console.log("Send myRepo");
             this.myRepo(error);
         }
     };
     myRepo = (error) => {
         try {
-            if (MyDefines.sentry_logging)
+            if (MyDefines.myRepo_logging)
                 Sentry.captureException(error);
             else
                 console.log(error);
@@ -158,7 +144,7 @@ class myFuncs  {
     };
     myBreadCrumbs = (message, category) => {
         try {
-            if (MyDefines.sentry_logging  && MyDefines.console_log_breadcrumbs) {
+            if (MyDefines.myRepo_logging  && MyDefines.console_log_breadcrumbs) {
                     let bc_object = {
                     message: message,
                 };

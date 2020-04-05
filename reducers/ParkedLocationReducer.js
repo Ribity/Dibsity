@@ -1,6 +1,6 @@
 import MyDefines from "../constants/MyDefines";
 
-const INITIAL_STATE = MyDefines.default_location;
+const INITIAL_STATE = null;
 
 let parkedLocationReducer;
 export default parkedLocationReducer = (state = INITIAL_STATE, action) => {
@@ -11,7 +11,7 @@ export default parkedLocationReducer = (state = INITIAL_STATE, action) => {
             if (action.payload === null) {
                 return {}
             }
-
+            console.log("UpdateParkedLocation: ", action.payload);
             return action.payload;
 
         default:

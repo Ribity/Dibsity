@@ -4,11 +4,11 @@ export default {
     expo_channel_prod: "dibsity-prod",
 
     clearAllStorage: false,
-    log_details: true,
+    log_details: false,
     fakeLocation: false,    // Fakes location changes.
 
     console_log_breadcrumbs: false,
-    sentry_logging: false,
+    myRepo_logging: false,
 
     myStatusBarHeight: Constants.statusBarHeight,
     myBottomTabBarHeight: 45,
@@ -46,12 +46,24 @@ export default {
         },
         "timestamp": 0,
     },
+    fake_parked_location: {
+        "coords": {
+            "accuracy": -1,
+            "altitude": -1,
+            "altitudeAccuracy": -1,
+            "heading": -1,
+            "latitude": 35.9,
+            "longitude": -78.6,
+            "speed": -1,
+        },
+        "timestamp": 0,
+    },
     default_user: {
         profile: {
             client_allow_confirmation_popups: true,
             total_points: 0,
             refocus_seconds: 8,
-            zoom_multiplier: 3,
+            zoom_multiplier: 20,
             map_user_size: 2,
             map_user_icon: 1,
             map_orients_to_users_bearing: 1,

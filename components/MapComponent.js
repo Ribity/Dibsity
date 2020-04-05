@@ -28,6 +28,7 @@ const _MS_PER_DAY = 1000 * 60 * 60 * 24;
 
 const {height, width} = Dimensions.get('window');
 
+const parkIcon = require('../assets/images/park.png');
 const userIcon1 = require('../assets/images/frog1.png');
 const userIcon2e = require('../assets/images/frogEast.png');
 const userIcon2w = require('../assets/images/frogWest.png');
@@ -237,7 +238,7 @@ class MapComponent extends React.Component {
     static getDerivedStateFromProps(nextProps, prevState){
         try {
             myfuncs.myBreadCrumbs('getDerivedStateFromProps', "MapComponent");
-            console.log("MapComponenet GetDerivedStateFromProps");
+            // console.log("MapComponenet GetDerivedStateFromProps");
             let update = {};
             if (prevState.parkedLocation !== nextProps.parkedLocation) {
                 console.log("MapComponenet GetDerivedStateFromProps new parkedLocationa: ", nextProps.parkedLocation);
@@ -586,9 +587,6 @@ class MapComponent extends React.Component {
             rWidth  *= MyDefines.default_user.profile.map_user_size;
             rHeight *= MyDefines.default_user.profile.map_user_size;
 
-            if (myfuncs.isLocationValid(this.state.parkedLocation))
-                console.log("parked;", this.state.parkedLocation);
-
                 return (
                 this.state.locationResult === null ?
                     <View>
@@ -644,7 +642,6 @@ class MapComponent extends React.Component {
                                 </MapView.Marker>
                             ))}
 
-
                             {myfuncs.isLocationValid(this.state.parkedLocation) &&
                                 <MapView.Marker
                                     coordinate={{
@@ -654,12 +651,17 @@ class MapComponent extends React.Component {
                                     title={"Marker"}
                                     description={"(Headed:)  "}
                                 >
-                                    <Image source={userIcon2w}
-                                           style={{height: rHeight, width: rWidth, zIndex: 4}}
+                                    <Image source={parkIcon}
+                                           style={{
+                                               width: 20,
+                                               height: 20,
+                                               resizeMode: 'contain',
+                                               zIndex: 3,
+                                           }}
                                     />
+
                                 </MapView.Marker>
                             }
-
 
                             <MapView.Marker.Animated
                                 coordinate={this.state.coordinate}
@@ -702,7 +704,8 @@ const mapStateToProps = (state) => {
     const { location } = state;
     const { tasks } = state;
     const { fakeLocations } = state;
-    return { location, tasks, fakeLocations}
+    const { parkedLocation } = state;
+    return { location, tasks, fakeLocations, parkedLocation}
 };
 const mapDispatchToProps = dispatch => (
     bindActionCreators({

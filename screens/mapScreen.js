@@ -1,7 +1,5 @@
 import React from 'react';
-import {Alert, StyleSheet, View, Dimensions, Image, TouchableOpacity} from 'react-native';
-import {SafeAreaView} from "react-navigation";
-import {Layout, Text} from "@ui-kitten/components";
+import {Alert, StyleSheet, View, Dimensions, Image, Text, TouchableOpacity} from 'react-native';
 import MapComponent from '../components/MapComponent';
 
 import Toast from 'react-native-easy-toast';
@@ -23,18 +21,16 @@ import * as firebase from "firebase";
 import 'firebase/firestore';
 import {GeoCollectionReference, GeoFirestore} from "geofirestore";
 
-import { decode, encode } from 'base-64'
 import {SaveParkedIcon} from "../components/SaveParkedIcon";
 import {DepartParkedIcon} from "../components/DepartParkedIcon";
 import {MyButton} from "../components/MyButton";
 import * as Constants from "expo-constants";
-global.crypto = require("@firebase/firestore");
-global.crypto.getRandomValues = byteArray => { for (let i = 0; i < byteArray.length; i++) { byteArray[i] = Math.floor(256 * Math.random()); } }
 
-if (!global.btoa) { global.btoa = encode; }
-
-if (!global.atob) { global.atob = decode; }
-
+// import { decode, encode } from 'base-64'
+// global.crypto = require("@firebase/firestore");
+// global.crypto.getRandomValues = byteArray => { for (let i = 0; i < byteArray.length; i++) { byteArray[i] = Math.floor(256 * Math.random()); } }
+// if (!global.btoa) { global.btoa = encode; }
+// if (!global.atob) { global.atob = decode; }
 
 let willUnmount = false;
 let myfirestore = null;
@@ -259,9 +255,11 @@ class MapScreen extends React.Component {
 
             console.log("Saving parking location");
 
-            this.props.updateParkedLocation(this.props.location);
+            // this.props.updateParkedLocation(this.props.location);                        // mk1 this is the real one.
+            // myfuncs.writeUserDataToLocalStorage("parkedLocation", this.props.location);  // mk1 this is the real one
+            this.props.updateParkedLocation(MyDefines.fake_parked_location);
+            myfuncs.writeUserDataToLocalStorage("parkedLocation", MyDefines.fake_parked_location );
             this.setState({userSavedParkingLocation: true});
-            myfuncs.writeUserDataToLocalStorage("parkedLocation", this.props.location);
             this.refs.toast.show("Parking Location Saved", 3000);
             this.refs.toastCenter.show("Parking Location Saved", 3000);
 

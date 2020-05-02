@@ -225,6 +225,7 @@ class myFuncs  {
             let myTemp = geocollection.doc(uniqueKey).set({
                 name: 'KingRcd5',
                 dateTime: new Date(),
+                // date3: firebase.firestore.Timestamp.fromDate(new Date()),
                 score: 100,
                 coordinates: new firebase.firestore.GeoPoint(location.coords.latitude, location.coords.longitude)
             });

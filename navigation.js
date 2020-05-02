@@ -20,8 +20,9 @@ let defNav = {
 };
 
 const MapStack = createStackNavigator({
-    Map: MapScreen,
-},
+        Map: MapScreen,
+        PrivacyMap: PrivacyScreen,
+    },
     {defaultNavigationOptions: () => (defNav)});
 
 const MyVehicleStack = createStackNavigator({

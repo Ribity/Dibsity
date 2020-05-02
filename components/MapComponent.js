@@ -18,6 +18,7 @@ import myfuncs from '../services/myFuncs';
 import MyDefines from '../constants/MyDefines';
 import _ from 'lodash'
 import myStyles from "../myStyles";
+import ApiKeys from "../constants/ApiKeys";
 
 const GEOLOCATION_OPTIONS = { accuracy: Location.Accuracy.Highest, interval: 1000, enableHighAccuracy: true};
 
@@ -28,13 +29,13 @@ const _MS_PER_DAY = 1000 * 60 * 60 * 24;
 
 const {height, width} = Dimensions.get('window');
 
-const parkIcon = require('../assets/images/park.png');
+const parkIcon = require('../assets/images/park_60x60.png');
 const userIcon1 = require('../assets/images/frog1.png');
 const userIcon2e = require('../assets/images/frogEast.png');
 const userIcon2w = require('../assets/images/frogWest.png');
 const parkingSpotImage = require('../assets/images/frog1.png');
 
-let firestoreListenerLocation = {};
+let firestoreListenerLocationOne = {};
 
 class MapComponent extends React.Component {
 
@@ -42,11 +43,15 @@ class MapComponent extends React.Component {
         try {
             super(props);
 
-            this.geoSubscription = false;
+            this.geoSubscriptionOne = false;
             this.watchId = null;
             this.intervalId_animate = -1;
             this.fire_interval = -1;
             this.userHasControl = false;
+
+            this.tenMins = 0;
+            this.listenerOneTenMinutes = 0;
+            this.listenerTwoTenMinutes = 0;
 
             this.state = {
                 hasLocationPermissions: false,
@@ -83,7 +88,7 @@ class MapComponent extends React.Component {
 
             this.intervalId_animate = setInterval(this.handleAnimation,3000); // every 3 seconds
 
-            this.fire_interval = setInterval(this.check_firestore_listener_distance,10000);  // every 10 seconds
+            this.fire_interval = setInterval(this.check_firestore_listener_distance_and_time,10000);  // every 10 seconds
 
             if (MyDefines.fakeLocation)
                 setTimeout(this.fakeLocationChange, 5000);
@@ -109,9 +114,9 @@ class MapComponent extends React.Component {
         try {
             myfuncs.myBreadCrumbs('Willmount', this.props.navigation.state.routeName);
 
-            if (this.geoSubscription) {
-                this.geoSubscription();
-                this.geoSubscription = false;
+            if (this.geoSubscriptionOne) {
+                this.geoSubscriptionOne();
+                this.geoSubscriptionOne = false;
             }
             if (this.watchId) {
                 // console.log("remove watchPosition callback");
@@ -241,7 +246,7 @@ class MapComponent extends React.Component {
             // console.log("MapComponenet GetDerivedStateFromProps");
             let update = {};
             if (prevState.parkedLocation !== nextProps.parkedLocation) {
-                console.log("MapComponenet GetDerivedStateFromProps new parkedLocationa: ", nextProps.parkedLocation);
+                // console.log("MapComponenet GetDerivedStateFromProps new parkedLocationa: ", nextProps.parkedLocation);
                 update.parkedLocation = nextProps.parkedLocation;
             }
             // if (prevState.profiles !== nextProps.profiles) {
@@ -253,33 +258,50 @@ class MapComponent extends React.Component {
             return null;
         }
     };
-    check_firestore_listener_distance = () => {
+    check_firestore_listener_distance_and_time = () => {
         let reset_distance_meters = MyDefines.default_tasks.firestore_radius_meters / 2;
         let location = this.props.location;
         if (MyDefines.fakeLocation === true)
             location = this.fakeLocation;
-        if (myfuncs.isLocationValid(location) && myfuncs.isLocationValid(firestoreListenerLocation)) {
+
+        this.tenMins = myfuncs.getTenMinuteInterval();
+
+        if (myfuncs.isLocationValid(location) && myfuncs.isLocationValid(firestoreListenerLocationOne)) {
             let distance = myfuncs.calcDistance(
                 {
-                    "latitude": firestoreListenerLocation.coords.latitude,
-                    "longitude": firestoreListenerLocation.coords.longitude
+                    "latitude": firestoreListenerLocationOne.coords.latitude,
+                    "longitude": firestoreListenerLocationOne.coords.longitude
                 },
                 {
                     "latitude": location.coords.latitude,
                     "longitude": location.coords.longitude
                 });
             if (distance >= (reset_distance_meters)) {
-                this.refresh_map_and_firestore_listener()
+                console.log("Distance changed");
+                this.refresh_firestore_listenerOne(true)
+            } else {
+                // If ten minutes has changed, refresh one listener
+                if (this.tenMins !== this.listenerOneTenMinutes) {
+                    console.log("tenMins changed:", this.tenMinutes, ":", this.listenerOneTenMinutes);
+                    this.refresh_map_and_firestore_listenerOne(false);
+                }
             }
         }
     };
-    refresh_map_and_firestore_listener = () => {
-        this.setState({spaces: []});
-        this.addGeoFirestoreListeners();
+    refresh_map_and_firestore_listenerOne = (bDistance) => {
+        if (bDistance)
+            // this.setState({spaces: []});
+            this.clearSpaces(0);    // clears all spaces, and then we will get two new listeners.
+
+        else {
+            // clear the spaces for the oldest tenMins - no, this is done in addGeo
+        }
+
+        this.addGeoFirestoreListenerOne();
     };
-    addGeoFirestoreListeners() {
+    addGeoFirestoreListenerOne() {
         try {
-            myfuncs.myBreadCrumbs('addGeoFirestoreListeners', this.props.navigation.state.routeName);
+            myfuncs.myBreadCrumbs('addGeoFirestoreListenerOne', this.props.navigation.state.routeName);
             const firestore= firebase.firestore();
             const kilometers = MyDefines.default_tasks.firestore_radius_meters / 1000;
 
@@ -287,67 +309,71 @@ class MapComponent extends React.Component {
             if (MyDefines.fakeLocation === true)
                 location = this.fakeLocation;
 
-            console.log("Adding firestore query for ", kilometers, "kilometers");
-
+            if (this.tenMins === 0)
+                this.tenMins = myfuncs.getTenMinuteInterval();
 
             const geoFirestore = new GeoFirestore(firestore);
-            console.log("mk1aa " + geoFirestore);
 
-            const geoCollectionRef = geoFirestore.collection('ribbons');
+            if (this.tenMins !== this.listenerOneTenMinutes) {
+                this.clearSpaces(this.listenerOneTenMinutes);
+                this.listenerOneTenMinutes = this.tenMins;
+                const geoCollectionRef = geoFirestore.collection(ApiKeys.firebase_collection).doc(ApiKeys.firebase_doc).collection(this.tenMins.toString());
 
-            console.log("mk1ab");
+                if (this.geoSubscriptionOne) {
+                    console.log('cancelling old geoSubscriptionOne');
+                    this.geoSubscriptionOne();
+                    this.geoSubscriptionOne = false;
+                }
+                console.log("Firestore Listener1: ", kilometers, "/", this.tenMins);
 
-            if (this.geoSubscription) {
-                console.log('canceling old geoSubscription');
-                this.geoSubscription();
-                this.geoSubscription = false;
-            }
+                firestoreListenerLocationOne = _.cloneDeep(location);
 
-            firestoreListenerLocation = _.cloneDeep(location);
-
-            let query = geoCollectionRef.near({
-                center: new firebase.firestore.GeoPoint(location.coords.latitude,
-                    location.coords.longitude),
-                radius: kilometers,  // Radius is kilometers.  .6 would be 600 meters
-            });
-            this.geoSubscription = query.onSnapshot((snapshot) => {
-                console.log(snapshot.docChanges());
-                snapshot.docChanges().forEach((change) => {
-                    switch (change.type) {
-                        case 'added':
-                            console.log("New firestore key_entered", change.doc.data());
-                            this.addSpace(change.doc.id, change.doc.data());
-                            console.log("New firestore key_entered done");
-                            break;
-                        case 'modified':
-                            console.log("New firestore key_moved", change.doc.data());
-                            this.removeSpace(change.doc.id);
-                            this.addSpace(change.doc.id, change.doc.data());
-                            console.log("New firestore key_moved done");
-                            break;
-                        case 'removed':
-                            console.log("firestore key_exited", change.doc.id);
-                            this.removeSpace(change.doc.id);
-                            console.log("New firestore key_exited done");
-                            break;
-                        default:
-                            break;
-                    }
+                let query = geoCollectionRef.near({
+                    center: new firebase.firestore.GeoPoint(location.coords.latitude,
+                        location.coords.longitude),
+                    radius: kilometers,  // Radius is kilometers.  .6 would be 600 meters
                 });
-            });
+                this.geoSubscriptionOne = query.onSnapshot((snapshot) => {
+                    console.log(snapshot.docChanges());
+                    snapshot.docChanges().forEach((change) => {
+                        switch (change.type) {
+                            case 'added':
+                                console.log("New firestore1 key_entered", change.doc.data());
+                                this.addSpace(change.doc.id, change.doc.data());
+                                console.log("New firestore1 key_entered done");
+                                break;
+                            case 'modified':
+                                console.log("New firestore1 key_moved", change.doc.data());
+                                this.removeSpace(change.doc.id);
+                                this.addSpace(change.doc.id, change.doc.data());
+                                console.log("New firestore1 key_moved done");
+                                break;
+                            case 'removed':
+                                console.log("firestore1 key_exited", change.doc.id);
+                                this.removeSpace(change.doc.id);
+                                console.log("New firestore1 key_exited done");
+                                break;
+                            default:
+                                break;
+                        }
+                    });
+                });
+
+                console.log("Firestore listenerOne updated");
+
+            }
             console.log("Firestore listeners added");
-
-
-
-
-
 
         } catch (error) {
             console.log("catch geoFirestoreListener: " + error);
             myfuncs.myRepo(error);
         }
     }
-    addSpace (id, rcd) {
+    clearSpaces = () => {
+        this.setState({spaces: []});
+    };
+
+    addSpace = (id, rcd) => {
         try {
             myfuncs.myBreadCrumbs('addSpace', this.props.navigation.state.routeName);
             let newSpace = {};
@@ -356,22 +382,22 @@ class MapComponent extends React.Component {
             newSpace.id = rcd.id;
             newSpace.latitude = rcd.coordinates.latitude;
             newSpace.longitude = rcd.coordinates.longitude;
-            if (!myfuncs.isEmpty(rcd.timestamp)) {
-                console.log("addSpace timeStamp true");
-            }
-            newSpace.image = parkingSpotImage;
+            // if (!myfuncs.isEmpty(rcd.timestamp)) {
+            //     console.log("addSpace timeStamp true");
+            // }
 
             let joined = this.state.spaces.concat(newSpace);
             this.setState({ spaces: joined });
         } catch (error) {
             myfuncs.myRepo(error);
         }
-    }
-    removeMarker = (id) => {
+    };
+    removeSpace = (devId) => {
         try {
             myfuncs.myBreadCrumbs('removeMarker', this.props.navigation.state.routeName);
+            console.log("removeSpace: ", devId);
 
-            let index = this.state.spaces.findIndex(space => space.key === id);
+            let index = this.state.spaces.findIndex(space => space.key === devId);
             let nextSpaces = this.state.spaces;
             nextSpaces.splice(index,1);
 
@@ -443,11 +469,12 @@ class MapComponent extends React.Component {
                     });
             }
             if (myfuncs.isLocationValid(this.props.location)) {
-                this.addGeoFirestoreListeners();
+                this.addGeoFirestoreListenerOne();
                 this._watchLocationAsync();
             }
         } catch (error) {
             let status = Location.getProviderStatusAsync();
+            console.log("enableLoc:" + error);
             if (!status.locationServicesEnabled)
                 alert("Enable Location Services");
             else {
@@ -565,7 +592,24 @@ class MapComponent extends React.Component {
             myfuncs.myRepo(error);
         }
     };
+    onPressMyParkingSpot = () => {
+        try {
+            myfuncs.myBreadCrumbs('onPressMyParkingSpot', this.props.navigation.state.routeName);
 
+            Alert.alert("You are currently parked here","Additional msg",
+                [
+                    { text: 'Alert others that I am leaving shortly', onPress: () => {this.leavingShortly()} },
+                    {text: 'Ok'},
+                ]);
+
+        } catch (error) {
+            myfuncs.myRepo(error);
+        }
+    };
+    leavingShortly = () => {
+        console.log("perform Leaving shortly");
+        myfuncs.addFirestoreLeavingRcd(this.props.location);
+    };
     render() {
         try {
             myfuncs.myBreadCrumbs('render', "MapComponent");
@@ -633,12 +677,6 @@ class MapComponent extends React.Component {
                                     // description={"(Headed: " + space.bearing_desc + ")  " + space.public_message}
                                     onPress={() => this.onPressSpace(space)}
                                 >
-                                    <Image source={space.image}
-                                           style={{
-                                               width: 8 * MyDefines.default_user.profile.map_ribbon_size,
-                                               height: 11 * MyDefines.default_user.profile.map_ribbon_size,
-                                           }}
-                                    />
                                 </MapView.Marker>
                             ))}
 
@@ -648,8 +686,9 @@ class MapComponent extends React.Component {
                                         longitude: this.state.parkedLocation.coords.longitude,
                                         latitude: this.state.parkedLocation.coords.latitude
                                     }}
-                                    title={"Marker"}
-                                    description={"(Headed:)  "}
+                                    title={"You are parked here"}
+                                    description={"More msgs data"}
+                                    onPress={() => this.onPressMyParkingSpot()}
                                 >
                                     <Image source={parkIcon}
                                            style={{

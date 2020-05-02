@@ -1,17 +1,14 @@
 import React from 'react';
 import {
     View,
-    ScrollView, StyleSheet,
+    ScrollView, StyleSheet, Text
 } from 'react-native';
 import {SafeAreaView} from "react-navigation";
-import {Layout, Text} from "@ui-kitten/components";
-
 
 import myStyles from "../myStyles";
 import myfuncs from "../services/myFuncs";
 
 import {ScreenTitle} from "../components/screenTitle";
-import {ThemeButton} from "../components/themeButton";
 
 export default class AboutScreen extends React.Component {
     static navigationOptions = ({navigation}) => {
@@ -19,7 +16,6 @@ export default class AboutScreen extends React.Component {
             myfuncs.myBreadCrumbs('navigationOptions', 'AboutScreen');
             return {
                 headerTitle: () => <ScreenTitle title={"About"}/>,
-                headerRight: () => <ThemeButton/>,
             };
         } catch (error) {
             myfuncs.myRepo(error);
@@ -36,7 +32,7 @@ export default class AboutScreen extends React.Component {
 	    return (
 
             <SafeAreaView style={myStyles.container}>
-                <Layout style={{flex: 1, alignItems: 'center'}}>
+                <View style={{flex: 1, alignItems: 'center'}}>
 
 					<View style={{padding: 20}}>
 
@@ -64,7 +60,7 @@ export default class AboutScreen extends React.Component {
 						</View>
 						</ScrollView>
 					</View>
-				</Layout>
+				</View>
 			</SafeAreaView>
 		);
 	} catch (error) {

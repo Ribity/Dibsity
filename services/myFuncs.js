@@ -10,10 +10,17 @@ import * as Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import { activateKeepAwake, deactivateKeepAwake } from 'expo-keep-awake';
 
+import * as firebase from "firebase";
+import 'firebase/firestore';
+import {GeoFirestore} from "geofirestore";
+
+
 const SOUNDS = {};
 let SOURCES = {};
 let bSoundsAreLoaded = false;
 let bSoundIsPlaying = false;
+
+let myfirestore = null;
 
 class myFuncs  {
     init = async () => {
@@ -23,6 +30,8 @@ class myFuncs  {
         try {
             this.initRepo();
             this.myBreadCrumbs('init', "myfuncs");
+
+            await this.initFirebase();
 
             if (MyDefines.clearAllStorage === true)
                 await hardStorage.clearAll();
@@ -170,15 +179,59 @@ class myFuncs  {
             deactivateKeepAwake();
         }
     };
-    shortenName = (name, length) => {
-        // console.log("Shorten name: ", name, " len: ", length);
-        let short_name = name.substr(0, length);
-        let space_ofs = short_name.lastIndexOf(" ");
-        if (space_ofs > 0)
-            short_name = short_name.substr(0, space_ofs);
+    initFirebase = async () => {
+        try {
+            let fbConfig;
 
-        // console.log("Short: ", short_name);
-        return short_name;
+            fbConfig = ApiKeys.FirebaseConfig;
+            if (!firebase.apps.length) {
+                console.log("initializing firebase");
+                let app = await firebase.initializeApp(fbConfig);
+            }
+            myfirestore = firebase.firestore();
+
+        } catch (error) {
+            myfuncs.myRepo(error);
+        }
+    };
+    addFirestoreLeavingRcd = async (location) => {
+        try {
+            let geofirestore;
+
+            this.myBreadCrumbs('leavingShortly', "myfuncs");
+
+            if (myfirestore === null)   // This should never be null, because we init at init.
+                this.initFirebase();
+
+            let tenMins = this.getTenMinuteInterval();
+            // let tenMins = this.getOneMinuteInterval();
+            try {
+                geofirestore = new GeoFirestore(myfirestore);
+            }  catch (error) {
+                console.log("myFuncs geofireStore Exception. init'ing again");
+                this.initFirebase();
+                geofirestore = new GeoFirestore(myfirestore);
+                this.myBreadCrumbs('leavingShortly init again', "myfuncs");
+                myfuncs.myRepo(error);
+            }
+            let geocollection = geofirestore.collection(ApiKeys.firebase_collection).
+                doc(ApiKeys.firebase_doc).collection(tenMins.toString());
+
+            console.log("save parked button pressed: ", tenMins);
+
+            // geocollection.add({     // This let's the database create a unique record, or I create unique record below
+            let uniqueKey = Constants.default.deviceId;
+            // let uniqueKey = Constants.default.deviceId;
+            let myTemp = geocollection.doc(uniqueKey).set({
+                name: 'KingRcd5',
+                dateTime: new Date(),
+                score: 100,
+                coordinates: new firebase.firestore.GeoPoint(location.coords.latitude, location.coords.longitude)
+            });
+
+        } catch (error) {
+            myfuncs.myRepo(error);
+        }
     };
     isEmpty = (myObj) => {
         return !myObj || Object.keys(myObj).length === 0;
@@ -225,30 +278,16 @@ class myFuncs  {
         }
         return false;
     };
-    incrementNumUsage = async () => {
-        let numUsage = await hardStorage.getKey("numUsage");
-
-        if (numUsage !== null) {
-            numUsage++;
-        } else {
-            numUsage = 1;
-        }
-        await hardStorage.setKey("numUsage", numUsage);
-
-        if (Constants.isDevice || Constants.default.isDevice) {
-            if (numUsage === 5 || numUsage === 20 || numUsage % 100 === 0) {
-                let msg = 'Number of Usages = ' + numUsage.toString();
-                Sentry.captureMessage(msg, 'info');
-            }
-        }
-        return numPlayed;
-    };
     getTenMinuteInterval = () => {
         let baseDate = new Date(2020, 2, 31, 0, 0);
         let currDate = new Date();
-
-        let tenMinutes = (currDate - baseDate) / (1000 *  60 * 10 );
-        return Math.floor(tenMinutes);
+        if (MyDefines.oneMinuteIntervals) {
+            let oneMinutes = (currDate - baseDate) / (1000 *  60);
+            return Math.floor(oneMinutes);
+        } else {
+            let tenMinutes = (currDate - baseDate) / (1000 * 60 * 10);
+            return Math.floor(tenMinutes);
+        }
     };
     getOneMinuteInterval = () => {
         let baseDate = new Date(2020, 2, 31, 0, 0);
@@ -270,14 +309,4 @@ class myFuncs  {
 const myfuncs = new myFuncs();
 export default myfuncs;
 
-// const mapStateToProps = (state) => {
-//     const { settings } = state;
-//     return { settings }
-// };
-// const mapDispatchToProps = dispatch => (
-//     bindActionCreators({
-//         updateSettings,
-//     }, dispatch)
-// );
-// export default connect(mapStateToProps, mapDispatchToProps)(myfuncs);
 

@@ -1,7 +1,6 @@
 import React from 'react';
-import {StyleSheet, View, Dimensions} from 'react-native'
+import {StyleSheet, View, Dimensions, Text} from 'react-native'
 import {SafeAreaView} from "react-navigation";
-import {Layout, Select, Text, Toggle} from "@ui-kitten/components";
 import myfuncs from "../services/myFuncs";
 import MyDefines from "../constants/MyDefines";
 import {MyHelpIcon} from "../components/MyHelpIcon";
@@ -10,9 +9,8 @@ import {connect} from "react-redux";
 import {bindActionCreators} from "redux";
 import {updateSettings} from "../actions/settingsActions";
 import {ScreenTitle} from "../components/screenTitle";
-import {ThemeButton} from "../components/themeButton";
 import {MyButton} from "../components/MyButton";
-import myStyles from "../myStyles";
+import SettingsList from 'react-native-settings-list';
 
 const {height, width} = Dimensions.get('window');
 
@@ -24,7 +22,6 @@ class SettingsScreen extends React.Component {
             return {
                 headerLeft: () => <MyButton onPress={() => navigation.navigate("About")} title={"About"}/>,
                 headerTitle: () => <ScreenTitle title={"Settings"} privacy={() => navigation.navigate("PrivacySettings")}/>,
-                headerRight: () => <ThemeButton/>,
             };
         } catch (error) {
             myfuncs.myRepo(error);
@@ -60,26 +57,36 @@ class SettingsScreen extends React.Component {
         try {
             myfuncs.myBreadCrumbs('render', this.props.navigation.state.routeName);
             return (
-                <SafeAreaView style={styles.container}>
-                    <Layout style={{flex: 1, paddingLeft: 10, alignItems: 'flex-start'}}>
+                <View style={{backgroundColor:'#EFEFF4',flex:1}}>
 
-                        <Toggle
-                            style={styles.toggle}
-                            status='warning'
 
-                            text='Keep Screen Awake'
-                            textStyle={styles.text}
-                            checked={this.state.settings.keep_awake}
-                            onChange={(bEvent) => this.updateSettings({keep_awake: bEvent})}
+                    <SettingsList borderColor='#c8c7cc' defaultItemSize={50}>
+
+
+                        <SettingsList.Item
+                            hasSwitch={true}
+                            switchState={this.state.settings.keep_awake}
+                            switchOnValueChange={(bEvent) => this.updateSettings({keep_awake: bEvent})}
+                            hasNavArrow={false}
+                            title='Keep screen awake'
+                            titleStyle={{fontSize:20}}
                         />
 
-                    </Layout>
+                        <SettingsList.Item
+                            title='Map settings'
+                            titleInfo='Snap-back secs'
+                            titleInfoStyle={styles.titleInfoStyle}
+                            titleStyle={{fontSize:20}}
+                            onPress={() => this.props.navigation.navigate("SettingsDefaultMap")}
+                        />
+
+                    </SettingsList>
 
                     <MyHelpIcon onPress={this.onHelpPress}/>
                     <MyHelpModal screen={"Settings"}
                                  onExitPress={this.onHelpExitPress}
                                  isVisible={this.state.isModalVisible}/>
-                </SafeAreaView>
+                </View>
             );
         } catch (error) {
             myfuncs.myRepo(error);
@@ -91,7 +98,7 @@ class SettingsScreen extends React.Component {
             let new_settings = {...this.state.settings, ...new_prop};
 
             // Note, no need to update state, because state auto-updates in getDerivedState
-            // await this.setState({settings: new_settings});
+            this.setState({settings: new_settings});
             await this.props.updateSettings(new_settings);
             await this.updateStorage();
 
@@ -130,39 +137,9 @@ class SettingsScreen extends React.Component {
     };
 };
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: MyDefines.myTabColor,
-    },
-    toggle: {
-        margin: 6,
-    },
-    select: {
-        margin: 6,
-    },
-    text: {
-        color: 'green',
-        fontSize: 15,
-    },
-    textStyle: {
-        color: 'green',
-
+    titleInfoStyle: {
         fontSize: 20,
-        lineHeight: 22,
-        alignSelf: 'center',
     },
-    labelStyle: {
-        color: 'green',
-        fontSize: 15,
-    },
-    controlStyle: {
-        borderRadius: 8,
-        width: width-30,
-        color: 'green',
-    },
-
-    buttonText: {textAlign: 'center', color: 'green', fontSize: 20, fontWeight: 'bold'},
-
 });
 
 const mapStateToProps = (state) => {

@@ -17,15 +17,14 @@ import {MyHelpModal} from "../components/MyHelpModal";
 import {LogoComponent} from "../components/LogoComponent";
 import {ScreenTitle} from "../components/screenTitle";
 import ApiKeys from "../constants/ApiKeys";
-import * as firebase from "firebase";
-import 'firebase/firestore';
-import {GeoCollectionReference, GeoFirestore} from "geofirestore";
 
 import {SaveParkedIcon} from "../components/SaveParkedIcon";
 import {DepartParkedIcon} from "../components/DepartParkedIcon";
 import {MyButton} from "../components/MyButton";
 import * as Constants from "expo-constants";
 
+// The following code was added because the latest firestore has bugs/exceptions (crypto) with react native.
+//  but expo 37 imports a previous version of firestore that is compatible, so no longer needed
 // import { decode, encode } from 'base-64'
 // global.crypto = require("@firebase/firestore");
 // global.crypto.getRandomValues = byteArray => { for (let i = 0; i < byteArray.length; i++) { byteArray[i] = Math.floor(256 * Math.random()); } }
@@ -51,7 +50,8 @@ class MapScreen extends React.Component {
             const { params = {} } = navigation.state;
             return {
                 headerLeft: () => <LogoComponent/>,
-                headerTitle: () => <ScreenTitle title={"Dibsity"}/>,
+                headerTitle: () => <ScreenTitle title={"Dibsity"} privacy={() => navigation.navigate("PrivacyMap")}/>,
+
 
             };
         } catch (error) {
@@ -104,26 +104,8 @@ class MapScreen extends React.Component {
             await this.props.updateSettings(retObj.settings);
             myfuncs.setAwakeorNot(this.props.settings.keep_awake);
 
-            await this.initFirebase();
+            // await this.initFirebase();
 
-        } catch (error) {
-            myfuncs.myRepo(error);
-        }
-    };
-    initFirebase = async () => {
-        try {
-            let fbConfig;
-
-            fbConfig = ApiKeys.FirebaseConfig;
-            if (!firebase.apps.length) {
-                console.log("initializing firebase");
-                let app = await firebase.initializeApp(fbConfig);
-            }
-            myfirestore = firebase.firestore();
-
-            // this.onAuthStateChangedUnsubscribe = firebase.auth().onAuthStateChanged(this.onAuthStateChanged);
-            // this.signInAnonymously();
-            // this.storeHighScore(2, 1001);
             this.setState({isAuthenticated: true});
 
         } catch (error) {
@@ -208,32 +190,42 @@ class MapScreen extends React.Component {
             myfuncs.myRepo(error);
         }
     };
-    departingParkedLocation = () => {
+    leavingShortly = () => {
         try {
-            myfuncs.myBreadCrumbs('departingParkedLocation', this.props.navigation.state.routeName);
+            myfuncs.myBreadCrumbs('leavingShortly', this.props.navigation.state.routeName);
 
-            let tenMins = myfuncs.getTenMinuteInterval();
-            // let tenMins = myfuncs.getOneMinuteInterval();
-            let geofirestore = new GeoFirestore(myfirestore);
-            let geocollection = geofirestore.collection(ApiKeys.firebase_collection).
-                                doc(ApiKeys.firebase_doc).collection(tenMins.toString());
-
-            console.log("save parked button pressed: ", tenMins);
-
-            // geocollection.add({     // This let's the database create a unique record, or I create unique record below
-            let uniqueKey = Constants.default.deviceId;
-            let myTemp = geocollection.doc(uniqueKey).set({
-
-                name: 'KingRcd2',
-                score: 100,
-                // coordinates: new firebase.firestore.GeoPoint(38,38)
-                coordinates: new firebase.firestore.GeoPoint(this.props.location.coords.latitude, this.props.location.coords.longitude)
-            });
-
+            myfuncs.addFirestoreLeavingRcd(this.props.location);
         } catch (error) {
             myfuncs.myRepo(error);
         }
     };
+
+    // leavingShortly = () => {
+    //     try {
+    //         myfuncs.myBreadCrumbs('leavingShortly', this.props.navigation.state.routeName);
+    //
+    //         let tenMins = myfuncs.getTenMinuteInterval();
+    //         // let tenMins = myfuncs.getOneMinuteInterval();
+    //         let geofirestore = new GeoFirestore(myfirestore);
+    //         let geocollection = geofirestore.collection(ApiKeys.firebase_collection).
+    //                             doc(ApiKeys.firebase_doc).collection(tenMins.toString());
+    //
+    //         console.log("save parked button pressed: ", tenMins);
+    //
+    //         // geocollection.add({     // This let's the database create a unique record, or I create unique record below
+    //         let uniqueKey = Constants.default.deviceId;
+    //         let myTemp = geocollection.doc(uniqueKey).set({
+    //
+    //             name: 'KingRcd3',
+    //             score: 100,
+    //             // coordinates: new firebase.firestore.GeoPoint(38,38)
+    //             coordinates: new firebase.firestore.GeoPoint(this.props.location.coords.latitude, this.props.location.coords.longitude)
+    //         });
+    //
+    //     } catch (error) {
+    //         myfuncs.myRepo(error);
+    //     }
+    // };
     parkedLocation = () => {
         try {
             myfuncs.myBreadCrumbs('parkedLocation', this.props.navigation.state.routeName);
@@ -288,7 +280,7 @@ class MapScreen extends React.Component {
                         {(this.state.readyToGo === true &&
                             MyDefines.default_tasks.refresh_map === false &&
                             this.state.userSavedParkingLocation) &&
-                        <DepartParkedIcon onPress={this.departingParkedLocation} />
+                        <DepartParkedIcon onPress={this.leavingShortly} />
                         }
 
                        {this.state.welcomeTheUser === true &&

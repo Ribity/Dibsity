@@ -1,16 +1,11 @@
 import React from 'react';
-import {
-    View,
-    ScrollView, StyleSheet,
-} from 'react-native';
+import {View, ScrollView, StyleSheet, Text} from 'react-native';
 import {SafeAreaView} from "react-navigation";
-import {Layout, Text} from "@ui-kitten/components";
 
 import myStyles from "../myStyles";
 import myfuncs from "../services/myFuncs";
 
 import {ScreenTitle} from "../components/screenTitle";
-import {ThemeButton} from "../components/themeButton";
 
 export default class PrivacyScreen extends React.Component {
     static navigationOptions = ({navigation}) => {
@@ -18,7 +13,6 @@ export default class PrivacyScreen extends React.Component {
             myfuncs.myBreadCrumbs('navigationOptions', 'PrivacyScreen');
             return {
                 headerTitle: () => <ScreenTitle title={"Privacy"} androidMoveLeft={20}/>,
-                headerRight: () => <ThemeButton/>,
             };
         } catch (error) {
             myfuncs.myRepo(error);
@@ -35,7 +29,7 @@ export default class PrivacyScreen extends React.Component {
             myfuncs.myBreadCrumbs('render', this.props.navigation.state.routeName);
             return (
             <SafeAreaView style={myStyles.container}>
-                <Layout style={{flex: 1, alignItems: 'center'}}>
+                <View style={{flex: 1, alignItems: 'center'}}>
 
                     <View style={{padding: 20}}>
                         <ScrollView
@@ -45,28 +39,34 @@ export default class PrivacyScreen extends React.Component {
                             }}>
 
                             <View>
-                            <Text style={styles.privacyText}>
-                                Dibsity does not transfer any data from your device. We do not
-                                collect, share or sell your data.
-                            </Text>
+
                             <Text style={styles.privacyText}>
                                 You have total privacy.
                             </Text>
                             <Text style={styles.privacyText}>
-                               We do not upload or transfer the profile data
-                                you enter. It is stored only on your local, private device.
+                                Dibsity does not sell your personal data.
                             </Text>
                             <Text style={styles.privacyText}>
-                                We will never ask for your EMail address.
+                               There is no sign-up or login-in.
+                            </Text>
+                            <Text style={styles.privacyText}>
+                                We will never ask for your EMail address or phone number.
+                                We provide Dibsity as a hobby.
                             </Text>
 
                             <Text style={styles.privacyText}>
-                                We do not know who you are, where you are, or what you're listening to.
+                                We do not know who you are. When you download the the app, we are given
+                                an arbitrary device-Id for your device.
+                                We use your device-Id to save and reference your data in the
+                                cloud database. The privacy we give, however, prevents us from persisting/preserving
+                                your data when you use a different device or if you delete the Dibsity app and
+                                download again.  This was a tough decision for us,
+                                but we lean towards providing privacy.
                             </Text>
                             </View>
                         </ScrollView>
                     </View>
-                </Layout>
+                </View>
             </SafeAreaView>
             );
         } catch (error) {

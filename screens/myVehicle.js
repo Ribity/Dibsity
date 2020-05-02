@@ -3,9 +3,9 @@ import {
     View,
     TextInput,
     StyleSheet,
-    Alert
+    Alert,
+    Text
 } from 'react-native';
-import {Layout, Text, Radio} from '@ui-kitten/components';
 
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import Toast from 'react-native-easy-toast';
@@ -99,7 +99,7 @@ class MyVehicleScreen extends React.Component {
                     onSubmitEditing={this.onSubmitPress}
                     contentContainerStyle={myStyles.container}
                 >
-                    <Layout style={myStyles.container}>
+                    <View style={myStyles.container}>
 
                     <View style={{marginTop: 20}}/>
 
@@ -154,7 +154,7 @@ class MyVehicleScreen extends React.Component {
                         <View style={{marginBottom: 50}}/>
 
 
-                    </Layout>
+                    </View>
                 </KeyboardAwareScrollView>
             );
         } catch (error) {

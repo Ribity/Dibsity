@@ -3,9 +3,9 @@ import { TouchableOpacity,  StyleSheet} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import myfuncs from "../services/myFuncs";
 
-export const MyOtherModalExit = ( {onPress} ) => {
+export const DepartingShortlyModalExit = ({onPress} ) => {
     try {
-        myfuncs.myBreadCrumbs('myOtherModalExit', 'MyOtherModalExit');
+        myfuncs.myBreadCrumbs('DepartingShortlytModalExit', 'DepartingShortlyModalExit');
         return (
                 <TouchableOpacity style={styles.floatingHelpExitIcon}
                                   onPress={onPress}

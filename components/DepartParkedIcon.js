@@ -5,21 +5,17 @@ import myfuncs from "../services/myFuncs";
 export const DepartParkedIcon = ({onPress} ) => {
     try {
         myfuncs.myBreadCrumbs('DepartParkedIcon', 'DepartParkedIcon');
-
         return (
             <TouchableOpacity style={styles.floatingParkedIcon}
                               onPress={onPress}
                               hitSlop={styles.hitSlop}>
-                <Text style={{fontSize: 19}}>Alert others that I'm leaving soon</Text>
+                <Text style={{fontSize: 19}}>Post to others my departure time</Text>
             </TouchableOpacity>
-
         );
     } catch (error) {
         myfuncs.myRepo(error);
     }
 };
-
-
 const styles = StyleSheet.create({
     floatingParkedIcon: {
         position: 'absolute',

@@ -46,6 +46,7 @@ class MapComponent extends React.Component {
             this.geoSubscription = [false, false];
             this.watchId = null;
             this.intervalId_animate = -1;
+            this.recalc = -1;
             this.fire_interval = -1;
             this.userHasControl = false;
 
@@ -87,6 +88,8 @@ class MapComponent extends React.Component {
 
             this.intervalId_animate = setInterval(this.handleAnimation,3000); // every 3 seconds
 
+            this.recalc = setInterval(this.recalculate_spaces,5000); // every 5 seconds
+
             this.fire_interval = setInterval(this.check_firestore_listener_distance_and_time,10000);  // every 10 seconds
 
             if (MyDefines.fakeLocation)
@@ -113,9 +116,12 @@ class MapComponent extends React.Component {
         try {
             myfuncs.myBreadCrumbs('Willmount', this.props.navigation.state.routeName);
 
-            if (this.geoSubscription[0]) {
-                this.geoSubscription[0]();
-                this.geoSubscription[0] = false;
+            for (let idx=0; idx<2; idx++) {
+                if (this.geoSubscription[idx]) {
+                    console.log("Cancelling old Listener", idx, ":", this.listenerTenMinutes[idx], " (unMount)");
+                    this.geoSubscription[idx]();
+                    this.geoSubscription[idx] = false;
+                }
             }
             if (this.watchId) {
                 // console.log("remove watchPosition callback");
@@ -125,6 +131,8 @@ class MapComponent extends React.Component {
 
             if (this.intervalId_animate !== -1)
                 clearInterval(this.intervalId_animate);
+            if (this.recalc !== -1)
+                clearInterval(this.recalc);
             if (this.fire_interval !== -1)
                 clearInterval(this.fire_interval);
         } catch (error) {
@@ -200,7 +208,6 @@ class MapComponent extends React.Component {
     fakeLocationChange = () => {
         // if (MyDefines.detail_logging)
         //     console.log("fakeLocationChange");
-        if (MyDefines.fakeRibbonId === 0) {
             if (this.fakeCount % 30 === 0) {
                 this.fakeLocation.coords.latitude = 35.91057;
                 this.fakeLocation.coords.longitude = -78.69085;
@@ -215,21 +222,6 @@ class MapComponent extends React.Component {
                     this.fakeLocation.coords.heading -= 345;
             }
             this.fakeCount++;
-        } else {
-            // "fake_locations": [
-            //     {
-            //     "heading": 68,
-            //     "latitude": 35.91078,
-            //     "longitude": -78.69098,
-            //      },
-            // ]
-            if (this.props.fakeLocations.length > 0) {
-                this.fakeLocation.coords = this.props.fakeLocations[this.fakeCount];
-                this.fakeCount++;
-                if (this.fakeCount >= this.props.fakeLocations.length)
-                    this.fakeCount = 0;
-            }
-        }
 
         // console.log(this.fakeLocation.coords);
         if (myfuncs.isLocationValid(this.fakeLocation)) {
@@ -308,21 +300,22 @@ class MapComponent extends React.Component {
             const geoFirestore = new GeoFirestore(firestore);
 
                 // If the other listener is for THIS tenMins, set this listener to previous tenMins
-            let myTen = this.tenMins
+            let myTen = this.tenMins;
+            let myCollection = myfuncs.getCollectionName(0);
             if (this.listenerTenMinutes[(idx+1)%2] === myTen) {
                 myTen--;
+                myCollection = myfuncs.getCollectionName(-1);
             }
 
             const geoCollectionRef = geoFirestore.collection(ApiKeys.firebase_collection).
-                doc(ApiKeys.firebase_doc).collection(myTen.toString());
+                doc(myCollection).collection(myTen.toString());
 
             if (this.geoSubscription[idx]) {
-                console.log("cancelling old geoSubscription", idx);
+                console.log("Cancelling old Listener", idx, ":", this.listenerTenMinutes[idx]);
                 this.geoSubscription[idx]();
                 this.geoSubscription[idx] = false;
             }
             this.listenerTenMinutes[idx] = myTen;
-            console.log("Firestore Listener", idx, ": ", kilometers, "/", myTen);
 
             firestoreListenerLocation[idx] = _.cloneDeep(location);
 
@@ -332,37 +325,137 @@ class MapComponent extends React.Component {
                 radius: kilometers,  // Radius is kilometers.  .6 would be 600 meters
             });
             this.geoSubscription[idx] = query.onSnapshot((snapshot) => {
-                console.log(snapshot.docChanges());
+                // console.log(snapshot.docChanges());
                 snapshot.docChanges().forEach((change) => {
                     switch (change.type) {
                         case 'added':
-                            console.log("New firestore" + idx, change.doc.data());
+                            // console.log("New firestore" + idx, change.doc.data());
                             this.addSpace(change.doc.id, change.doc.data(), idx);
-                            console.log("New firestore" + idx + " key_entered done");
+                            // console.log("New firestore" + idx + " key_entered done");
                             break;
                         case 'modified':
-                            console.log("New firestore", idx, " key_moved:", change.doc.data());
-                            this.removeSpace(change.doc.id);
+                            // console.log("New firestore", idx, " key_moved:", change.doc.data());
+                            this.removeSpace(change.doc.id, idx);
                             this.addSpace(change.doc.id, change.doc.data(), idx);
-                            console.log("New firestore" + idx + " key_moved done");
+                            // console.log("New firestore" + idx + " key_moved done");
                             break;
                         case 'removed':
-                            console.log("firestore", idx, " key_exited", change.doc.id);
-                            this.removeSpace(change.doc.id);
-                            console.log("New firestore", idx, " key_exited done");
+                            // console.log("firestore", idx, " key_exited", change.doc.id);
+                            this.removeSpace(change.doc.id, idx);
+                            // console.log("New firestore", idx, " key_exited done");
                             break;
                         default:
                             break;
                     }
                 });
             });
-            console.log("Firestore", idx, " listener added");
+            console.log("Firestore Listener", idx, ":", myTen);
 
         } catch (error) {
             console.log("catch geoFirestoreListener", idx, ": " + error);
             myfuncs.myRepo(error);
         }
     }
+    recalculate_spaces = async () => {
+        let bModified = false;
+        let tSpaces = [...this.state.spaces];
+        let minsRemaining;
+        for (let i=tSpaces.length-1; i>=0; i--) {
+            minsRemaining = this.calcRemainingMinutes(tSpaces[i].secsDeparting);
+            if (minsRemaining >= 0) {
+                tSpaces[i].minsRemaining = minsRemaining;
+            } else {
+                console.log("splice out space");
+                tSpaces.splice(i, 1);
+            }
+            bModified = true;
+        }
+        if (bModified)
+            await this.setState({spaces: tSpaces});
+    };
+    calcRemainingMinutes = (secsDeparting) => {
+        let mySecs = new Date().getTime() / 1000;
+        mySecs = Math.trunc(mySecs);
+        let minsRemaining = ((secsDeparting - mySecs) / 60) + 1;
+
+        console.log("departingSec:", secsDeparting);
+        console.log("nowSec:", mySecs);
+        return(Math.trunc(minsRemaining));
+    };
+    addSpace = (devId, rcd, idx) => {
+        try {
+            myfuncs.myBreadCrumbs('addSpace', this.props.navigation.state.routeName);
+            let bAddIt = true;
+            let bModified = false;
+            let secsDeparting = rcd.dateTime.seconds + rcd.departingMinutes*60;
+            let minsRemaining = this.calcRemainingMinutes(secsDeparting);
+            console.log("minsRemaining:", minsRemaining);
+            console.log("addSpace Listener", idx, ":RCD:", rcd);
+            // console.log("addSpace Listener", idx, ":ID:", devId);
+            console.log("addSpace Listener", idx, ":TEN", this.listenerTenMinutes[idx]);
+
+            // if (!myfuncs.isEmpty(rcd.timestamp)) {
+            //     console.log("addSpace timeStamp true");
+            // }
+            let joined = this.state.spaces;
+            let index = joined.findIndex(space => space.key === devId);
+            if (index >= 0) {
+                console.log("found previous devId space tenMinutes:", joined[index].tenMinutes);
+                if (joined[index].tenMinutes < this.listenerTenMinutes[idx] ) {
+                    joined.splice(index, 1);
+                    console.log("delete previous devId space:");
+                    bAddIt = true;
+                    bModified = true;
+                } else {
+                    console.log("keep previous devId space:");
+                    bAddIt = false;
+                }
+            } else {
+                bAddIt = true;
+            }
+            if (bAddIt && minsRemaining >= 0) {
+                bModified = true;
+                let newSpace = {};
+
+                newSpace.tenMinutes = this.listenerTenMinutes[idx];
+                newSpace.key = devId;
+                // newSpace.id = rcd.id;
+                newSpace.latitude = rcd.coordinates.latitude;
+                newSpace.longitude = rcd.coordinates.longitude;
+                newSpace.name = rcd.name;
+                newSpace.minsRemaining = minsRemaining;
+                newSpace.secsDeparting = secsDeparting;
+                newSpace.fColor = "red";
+                newSpace.fSize = 45;
+                newSpace.bgColor = "green";
+                newSpace.width = 45;
+                newSpace.height = 45;
+
+                joined = joined.concat(newSpace);
+            }
+            if (bModified)
+                this.setState({spaces: joined});
+
+            console.log("Spaces:", joined);
+        } catch (error) {
+            console.log(error);
+            myfuncs.myRepo(error);
+        }
+    };
+    removeSpace = (devId, idx) => {
+        try {
+            myfuncs.myBreadCrumbs('removeSpace', this.props.navigation.state.routeName);
+            console.log("removeSpace Listener", idx, ":", this.listenerTenMinutes[idx]);
+
+            let index = this.state.spaces.findIndex(space => space.key === devId);
+            let nextSpaces = this.state.spaces;
+            nextSpaces.splice(index,1);
+
+            this.setState({spaces: nextSpaces})
+        } catch (error) {
+            myfuncs.myRepo(error);
+        }
+    };
     clearSpaces = async (idx) => {
         if (idx === -1)
             this.setState({spaces: []});
@@ -377,41 +470,6 @@ class MapComponent extends React.Component {
             if (tSpaces.length !== this.state.spaces.length) {
                 await this.setState({spaces: tSpaces});
             }
-        }
-    };
-
-    addSpace = (id, rcd, idx) => {
-        try {
-            myfuncs.myBreadCrumbs('addSpace', this.props.navigation.state.routeName);
-            let newSpace = {};
-            console.log("addSpace: ", idx, ":", rcd);
-            newSpace.tenMinutes = this.listenerTenMinutes[idx];
-            newSpace.key = id;
-            newSpace.id = rcd.id;
-            newSpace.latitude = rcd.coordinates.latitude;
-            newSpace.longitude = rcd.coordinates.longitude;
-            // if (!myfuncs.isEmpty(rcd.timestamp)) {
-            //     console.log("addSpace timeStamp true");
-            // }
-
-            let joined = this.state.spaces.concat(newSpace);
-            this.setState({ spaces: joined });
-        } catch (error) {
-            myfuncs.myRepo(error);
-        }
-    };
-    removeSpace = (devId) => {
-        try {
-            myfuncs.myBreadCrumbs('removeMarker', this.props.navigation.state.routeName);
-            console.log("removeSpace: ", devId);
-
-            let index = this.state.spaces.findIndex(space => space.key === devId);
-            let nextSpaces = this.state.spaces;
-            nextSpaces.splice(index,1);
-
-            this.setState({spaces: nextSpaces})
-        } catch (error) {
-            myfuncs.myRepo(error);
         }
     };
     _getLocationAsync = async () => {
@@ -568,31 +626,30 @@ class MapComponent extends React.Component {
 
             // Loop thru all spaces. If other spaces withing 30 feet, show list of those spaces.
             // Else there's only one space at this location, so show it's pop-up
-            let matchList = [];
-            for (let spaceObj of this.state.spaces) {
-                let distance = myfuncs.calcDistance(
-                    {"latitude": space.latitude, "longitude": space.longitude},
-                    {"latitude": spaceObj.latitude, "longitude": spaceObj.longitude});
+            // let matchList = [];
+            // for (let spaceObj of this.state.spaces) {
+            //     let distance = myfuncs.calcDistance(
+            //         {"latitude": space.latitude, "longitude": space.longitude},
+            //         {"latitude": spaceObj.latitude, "longitude": spaceObj.longitude});
+            //
+            //     if (distance < MyDefines.default_client_parms.map_group_meters) {
+            //         matchList.push(spaceObj);
+            //     }
+            // }
 
-                if (distance < MyDefines.default_client_parms.map_group_meters) {
-                    matchList.push(spaceObj);
-                }
-            }
 
-
-            let destination = "";
-            let public_message = "";
-            if (space.end_address !== "")
-                destination = '\r\nDestination: ' + space.end_address;
-            if (space.public_message !== "")
-                public_message = '\r\n' + space.public_message;
+            // let destination = "";
+            // let public_message = "";
+            // if (space.end_address !== "")
+            //     destination = '\r\nDestination: ' + space.end_address;
+            // if (space.public_message !== "")
+            //     public_message = '\r\n' + space.public_message;
 
             // console.log(e);
-                Alert.alert(space.name, 'id:' + space.id + '   Headed: ' + space.bearing_desc +
-                    destination + public_message,
+                Alert.alert(space.name, 'Vehicle: Blue Prius',
                     [
                         {
-                            text: 'Ribbon Details', onPress: () => {
+                            text: 'Reserve This Spot', onPress: () => {
                                 this.goToRibbonDetails(space)
                             }
                         },
@@ -606,9 +663,9 @@ class MapComponent extends React.Component {
         try {
             myfuncs.myBreadCrumbs('onPressMyParkingSpot', this.props.navigation.state.routeName);
 
-            Alert.alert("You are currently parked here","Additional msg",
+            Alert.alert("You are currently parked here",null,
                 [
-                    { text: 'Alert others that I am leaving shortly', onPress: () => {this.leavingShortly()} },
+                    { text: 'Post others that I am departing soon', onPress: () => {this.props.onDepartingShortlyPress()} },
                     {text: 'Ok'},
                 ]);
 
@@ -616,10 +673,10 @@ class MapComponent extends React.Component {
             myfuncs.myRepo(error);
         }
     };
-    leavingShortly = () => {
-        console.log("perform Leaving shortly");
-        myfuncs.addFirestoreLeavingRcd(this.props.location);
-    };
+    // leavingShortly = () => {
+    //     console.log("perform Leaving shortly");
+    //     myfuncs.addFirestoreLeavingRcd(this.props.location);
+    // };
     render() {
         try {
             myfuncs.myBreadCrumbs('render', "MapComponent");
@@ -631,8 +688,8 @@ class MapComponent extends React.Component {
                 else
                     userIcon = userIcon2w;
             }
-            let rWidth  = 20;
-            let rHeight = 20;
+            let rWidth  = 23;
+            let rHeight = 23;
             // if (Platform.OS === 'android') {
             //     rWidth = 15;
             //     rHeight = 15;
@@ -653,14 +710,14 @@ class MapComponent extends React.Component {
                         <View style={{padding: 10}}>
                             <Text style={myStyles.myText}>Location permissions are not granted.</Text>
                             <View style={{paddingTop: 30}}/>
-                            <Text style={myStyles.myText}>Ribity heavily depends on obtaining your location.</Text>
+                            <Text style={myStyles.myText}>Dibsity heavily depends on obtaining your location.</Text>
                             <View style={{paddingTop: 30}}/>
-                            <Text style={myStyles.myText}>Many Ribity functionalities are disabled.</Text>
+                            <Text style={myStyles.myText}>Many Dibsity functionalities are disabled.</Text>
                             <View style={{paddingTop: 30}}/>
                             <Text style={myStyles.myText}>We will NOT sell your data</Text>
                             <View style={{paddingTop: 30}}/>
 
-                            <Text style={myStyles.myText}>Please go to Settings on your device and allow the Ribity app access your location</Text>
+                            <Text style={myStyles.myText}>Please go to Settings on your device and allow the Dibsity app access your location</Text>
 
                             <View style={{paddingTop: 30}}/>
                             <MyButton title={'  Try again  '}
@@ -683,10 +740,17 @@ class MapComponent extends React.Component {
                                 <MapView.Marker
                                     key={index}
                                     coordinate={{longitude: space.longitude, latitude: space.latitude}}
-                                    // title={space.name}
-                                    // description={"(Headed: " + space.bearing_desc + ")  " + space.public_message}
+                                    title={space.name}
+                                    description={"Headed"}
                                     onPress={() => this.onPressSpace(space)}
                                 >
+                                    <Image style={[styles.imageContainer,
+                                        {width: space.width, height: space.height, resizeMode: 'contain'}]}
+                                    />
+                                    <View style={[styles.overlay, {backgroundColor: space.bgColor}]} />
+                                    <View style={styles.rectText}>
+                                        <Text style={{ color: space.fColor, fontWeight: 'bold', fontSize: space.fSize}}>{space.minsRemaining}</Text>
+                                    </View>
                                 </MapView.Marker>
                             ))}
 
@@ -697,7 +761,7 @@ class MapComponent extends React.Component {
                                         latitude: this.state.parkedLocation.coords.latitude
                                     }}
                                     title={"You are parked here"}
-                                    description={"More msgs data"}
+                                    // description={"More msgs data"}
                                     onPress={() => this.onPressMyParkingSpot()}
                                 >
                                     <Image source={parkIcon}
@@ -705,7 +769,7 @@ class MapComponent extends React.Component {
                                                width: 20,
                                                height: 20,
                                                resizeMode: 'contain',
-                                               zIndex: 3,
+                                               zIndex: 10,
                                            }}
                                     />
 
@@ -726,6 +790,7 @@ class MapComponent extends React.Component {
                                            width: rWidth,
                                            height: rHeight,
                                            resizeMode: 'contain',
+                                           opacity: .4,
                                            zIndex: 3,
                                        }}
                                 />
@@ -747,6 +812,26 @@ const styles = StyleSheet.create({
         alignSelf: 'stretch',
         height: (height - MyDefines.myStatusBarHeight),
     },
+    rectText: {
+        position: 'absolute',
+        top: -3,    // Needed to better center the numeral
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        fontWeight: 'bold',
+    },
+    imageContainer: {
+        flex: 1,
+        width: null,
+        height: null,
+    },
+    overlay: {
+        ...StyleSheet.absoluteFillObject,
+        borderRadius: 10,
+        // backgroundColor: 'lightgreen',
+    }
 });
 
 const mapStateToProps = (state) => {

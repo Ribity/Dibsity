@@ -194,11 +194,11 @@ class myFuncs  {
             myfuncs.myRepo(error);
         }
     };
-    addFirestoreLeavingRcd = async (location) => {
+    addFirestoreDepartingRcd = async (location, departingMinutes) => {
         try {
             let geofirestore;
 
-            this.myBreadCrumbs('leavingShortly', "myfuncs");
+            this.myBreadCrumbs('addFirestoreDepartingRcd', "myfuncs");
 
             if (myfirestore === null)   // This should never be null, because we init at init.
                 this.initFirebase();
@@ -211,20 +211,23 @@ class myFuncs  {
                 console.log("myFuncs geofireStore Exception. init'ing again");
                 this.initFirebase();
                 geofirestore = new GeoFirestore(myfirestore);
-                this.myBreadCrumbs('leavingShortly init again', "myfuncs");
+                this.myBreadCrumbs('Departing init again', "myfuncs");
                 myfuncs.myRepo(error);
             }
             let geocollection = geofirestore.collection(ApiKeys.firebase_collection).
-                doc(ApiKeys.firebase_doc).collection(tenMins.toString());
+                doc(myfuncs.getCollectionName(0)).collection(tenMins.toString());
 
             console.log("save parked button pressed: ", tenMins);
+            console.log("save departing in mintes:", departingMinutes);
+
 
             // geocollection.add({     // This let's the database create a unique record, or I create unique record below
             let uniqueKey = Constants.default.deviceId;
             // let uniqueKey = Constants.default.deviceId;
             let myTemp = geocollection.doc(uniqueKey).set({
-                name: 'KingRcd5',
+                name: 'Red Volkswagen',
                 dateTime: new Date(),
+                departingMinutes: departingMinutes,
                 // date3: firebase.firestore.Timestamp.fromDate(new Date()),
                 score: 100,
                 coordinates: new firebase.firestore.GeoPoint(location.coords.latitude, location.coords.longitude)
@@ -233,6 +236,25 @@ class myFuncs  {
         } catch (error) {
             myfuncs.myRepo(error);
         }
+    };
+    getCollectionName = (offset) => {
+        let d = new Date();
+        let n = d.getMonth() + 1;
+        let y = d.getFullYear();
+
+        // If user wants the collection name for the previous tenMinutes, check for month and year roll-over
+        if (offset === -1) {
+            if ( (d.getDate() === 1) && (d.getHours() === 0) && (d.getMinutes() < 10) )  {
+                if (n !== 1) {
+                    n--;
+                } else {
+                    n = 12;
+                    y--;
+                }
+            }
+        }
+
+        return(n.toString() + "_" + y.toString() );
     };
     isEmpty = (myObj) => {
         return !myObj || Object.keys(myObj).length === 0;
@@ -290,13 +312,13 @@ class myFuncs  {
             return Math.floor(tenMinutes);
         }
     };
-    getOneMinuteInterval = () => {
-        let baseDate = new Date(2020, 2, 31, 0, 0);
-        let currDate = new Date();
-
-        let oneMinutes = (currDate - baseDate) / (1000 *  60);
-        return Math.floor(oneMinutes);
-    };
+    // getOneMinuteInterval = () => {
+    //     let baseDate = new Date(2020, 2, 31, 0, 0);
+    //     let currDate = new Date();
+    //
+    //     let oneMinutes = (currDate - baseDate) / (1000 *  60);
+    //     return Math.floor(oneMinutes);
+    // };
     clone = (obj) => {
         if (null == obj || "object" != typeof obj) return obj;
         let copy = obj.constructor();

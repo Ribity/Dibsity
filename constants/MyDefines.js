@@ -6,7 +6,9 @@ export default {
     clearAllStorage: false,
     log_details: false,
     fakeLocation: false,    // Fakes location changes.
-    oneMinuteIntervals: true,
+    oneMinuteIntervals: false,
+
+    fakeSeconds: 1,
 
     console_log_breadcrumbs: false,
     myRepo_logging: false,

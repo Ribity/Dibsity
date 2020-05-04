@@ -10,6 +10,7 @@ import MapScreen  from './screens/mapScreen';
 import PrivacyScreen from './screens/PrivacyScreen';
 import MyVehicleScreen from './screens/myVehicle';
 import SettingsScreen from './screens/settings';
+import SettingsDefaultMapScreen from './screens/SettingsDefaultMapScreen';
 import AboutScreen from './screens/about';
 
 let defNav = {
@@ -34,6 +35,7 @@ const SettingsStack = createStackNavigator({
     Settings: SettingsScreen,
     PrivacySettings: PrivacyScreen,
     About: AboutScreen,
+    SettingsDefaultMap: SettingsDefaultMapScreen,
 }, {defaultNavigationOptions: () => (defNav)});
 
 MapStack.navigationOptions = {

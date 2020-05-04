@@ -14,6 +14,8 @@ import WaitComponent  from './../components/WaitComponent';
 import myfuncs from "../services/myFuncs";
 import {MyHelpIcon} from "../components/MyHelpIcon";
 import {MyHelpModal} from "../components/MyHelpModal";
+import {DepartingShortlyModal} from "../components/DepartingShortlyModal";
+
 import {LogoComponent} from "../components/LogoComponent";
 import {ScreenTitle} from "../components/screenTitle";
 import ApiKeys from "../constants/ApiKeys";
@@ -190,15 +192,6 @@ class MapScreen extends React.Component {
             myfuncs.myRepo(error);
         }
     };
-    leavingShortly = () => {
-        try {
-            myfuncs.myBreadCrumbs('leavingShortly', this.props.navigation.state.routeName);
-
-            myfuncs.addFirestoreLeavingRcd(this.props.location);
-        } catch (error) {
-            myfuncs.myRepo(error);
-        }
-    };
 
     // leavingShortly = () => {
     //     try {
@@ -208,7 +201,7 @@ class MapScreen extends React.Component {
     //         // let tenMins = myfuncs.getOneMinuteInterval();
     //         let geofirestore = new GeoFirestore(myfirestore);
     //         let geocollection = geofirestore.collection(ApiKeys.firebase_collection).
-    //                             doc(ApiKeys.firebase_doc).collection(tenMins.toString());
+    //                             doc(myfuncs.getCollectionName()).collection(tenMins.toString());
     //
     //         console.log("save parked button pressed: ", tenMins);
     //
@@ -272,7 +265,9 @@ class MapScreen extends React.Component {
                        <WaitComponent/>
                        }
                         {(this.state.readyToGo === true && MyDefines.default_tasks.refresh_map === false) &&
-                        <MapComponent navigation={this.props.navigation}/>
+                        <MapComponent navigation={this.props.navigation}
+                                      onDepartingShortlyPress={this.onDepartingShortlyPress}
+                        />
                         }
                         {(this.state.readyToGo === true && MyDefines.default_tasks.refresh_map === false) &&
                         <SaveParkedIcon onPress={this.parkedLocation} />
@@ -280,7 +275,7 @@ class MapScreen extends React.Component {
                         {(this.state.readyToGo === true &&
                             MyDefines.default_tasks.refresh_map === false &&
                             this.state.userSavedParkingLocation) &&
-                        <DepartParkedIcon onPress={this.leavingShortly} />
+                        <DepartParkedIcon onPress={this.onDepartingShortlyPress} />
                         }
 
                        {this.state.welcomeTheUser === true &&
@@ -309,7 +304,10 @@ class MapScreen extends React.Component {
                        <MyHelpIcon onPress={this.onHelpPress}/>
                        <MyHelpModal screen={"Map"}
                                     onExitPress={this.onHelpExitPress}
-                                    isVisible={this.state.isModalVisible}/>
+                                    isVisible={this.state.isHelpModalVisible}/>
+                        <DepartingShortlyModal onMinutesPressed={this.DepartingMinutesPressed}
+                                         onExitPress={this.onDepartingShortlyExitPress}
+                                         isVisible={this.state.isDepartingShortlyModalVisible}/>
                 </View>
             );
         } catch (error) {
@@ -320,10 +318,10 @@ class MapScreen extends React.Component {
 //<MapComponent navigation={this.props.navigation}/>
 //}
 
-onHelpPress = () => {
+    onHelpPress = () => {
         try {
             myfuncs.myBreadCrumbs('onHelpPress', this.props.navigation.state.routeName);
-            this.setState({isModalVisible: true});
+            this.setState({isHelpModalVisible: true});
         } catch (error) {
             myfuncs.myRepo(error);
         }
@@ -331,7 +329,33 @@ onHelpPress = () => {
     onHelpExitPress = () => {
         try {
             myfuncs.myBreadCrumbs('onHelpExitPress', this.props.navigation.state.routeName);
-            this.setState({isModalVisible: false});
+            this.setState({isHelpModalVisible: false});
+        } catch (error) {
+            myfuncs.myRepo(error);
+        }
+    };
+    onDepartingShortlyPress = () => {
+        try {
+            myfuncs.myBreadCrumbs('onDepartingShortlyPress', this.props.navigation.state.routeName);
+            this.setState({isDepartingShortlyModalVisible: true});
+        } catch (error) {
+            myfuncs.myRepo(error);
+        }
+    };
+    onDepartingShortlyExitPress = () => {
+        try {
+            myfuncs.myBreadCrumbs('onDepartingShortlyExitPress', this.props.navigation.state.routeName);
+            this.setState({isDepartingShortlyModalVisible: false});
+        } catch (error) {
+            myfuncs.myRepo(error);
+        }
+    };
+    DepartingMinutesPressed = (minutes) => {
+        try {
+            myfuncs.myBreadCrumbs('DepartingMinutesPressed', this.props.navigation.state.routeName);
+            this.setState({isDepartingShortlyModalVisible: false});
+
+            myfuncs.addFirestoreDepartingRcd(this.props.location, minutes);
         } catch (error) {
             myfuncs.myRepo(error);
         }

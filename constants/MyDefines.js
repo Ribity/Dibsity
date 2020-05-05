@@ -6,7 +6,7 @@ export default {
     clearAllStorage: false,
     log_details: false,
     fakeLocation: false,    // Fakes location changes.
-    fakeParkedLocation: true,
+    fakeParkedLocation: false,
     oneMinuteIntervals: false,
 
     fakeSeconds: 3,
@@ -56,7 +56,19 @@ export default {
             "altitude": -1,
             "altitudeAccuracy": -1,
             "heading": -1,
-            "latitude": 35.91115,
+            "latitude": 35.91079,
+            "longitude": -78.69092,
+            "speed": -1,
+        },
+        "timestamp": 0,
+    },
+    fake_parked_location_android: {
+        "coords": {
+            "accuracy": -1,
+            "altitude": -1,
+            "altitudeAccuracy": -1,
+            "heading": -1,
+            "latitude": 35.9112,
             "longitude": -78.69,
             "speed": -1,
         },

@@ -269,7 +269,8 @@ class myFuncs  {
         try {
             // this.myBreadCrumbs('isLocationValid', 'MyFuncs');
 
-            if (locObj === null || locObj === undefined || typeof locObj.coords === "undefined")
+            if (locObj === null || locObj === undefined ||
+                (typeof locObj.coords === "undefined" && typeof locObj.latitude === "undefined") )
                 return false;
             else
                 return true;

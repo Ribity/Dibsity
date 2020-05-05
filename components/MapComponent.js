@@ -19,6 +19,7 @@ import MyDefines from '../constants/MyDefines';
 import _ from 'lodash'
 import myStyles from "../myStyles";
 import ApiKeys from "../constants/ApiKeys";
+import {updateParkedLocation} from "../actions/ParkedLocationActions";
 
 const GEOLOCATION_OPTIONS = { accuracy: Location.Accuracy.Highest, interval: 1000, enableHighAccuracy: true};
 
@@ -89,7 +90,7 @@ class MapComponent extends React.Component {
 
             this.intervalId_animate = setInterval(this.handleAnimation,3000); // every 3 seconds
 
-            this.recalc = setInterval(this.recalculate_spaces,5000); // every 5 seconds
+            this.recalc = setInterval(this.recalculate_spaces,3000); // every 3 seconds
 
             this.fire_interval = setInterval(this.check_firestore_listener_distance_and_time,10000);  // every 10 seconds
 
@@ -371,7 +372,7 @@ class MapComponent extends React.Component {
                 let distance = myfuncs.calcDistance(
                     {"latitude": tSpaces[i].latitude, "longitude": tSpaces[i].longitude},
                     this.props.location.coords);
-                if (distance < 400) {
+                if (distance < 300) {
                     bMakeIconOpaque = true;
                 }
             } else {
@@ -397,10 +398,17 @@ class MapComponent extends React.Component {
         if (mins === 0)
             addition = 9;
 
-        spaceRcd.fColor = "orange";
-        spaceRcd.bgColor = "green";
-        // spaceRcd.fColor = "black";
-        // spaceRcd.bgColor = "orange";
+        if (mins < 5) {
+            spaceRcd.fColor = "orange";
+            spaceRcd.bgColor = "green";
+        } else {
+            spaceRcd.fColor = "tan";
+            // spaceRcd.bgColor = "khaki";
+
+            // spaceRcd.fColor = "grey";
+            // spaceRcd.fColor = "silver";
+            spaceRcd.bgColor = "gold";
+        }
 
         spaceRcd.fSize = base+addition;
         spaceRcd.width = base+addition;
@@ -651,9 +659,6 @@ class MapComponent extends React.Component {
             myfuncs.myRepo(error);
         }
     };
-    onPressParked = () => {
-        console.log("Press Parked");
-    };
     onPressSpace = (space) => {
         try {
             myfuncs.myBreadCrumbs('onPressMarker', this.props.navigation.state.routeName);
@@ -682,10 +687,7 @@ class MapComponent extends React.Component {
             // console.log(e);
                 Alert.alert(space.name, 'Vehicle: Blue Prius',
                     [
-                        {
-                            text: 'Reserve This Spot', onPress: () => {
-                                this.goToRibbonDetails(space)
-                            }
+                        {text: 'Reserve This Spot', onPress: () => {this.reserveThisSpot(space)}
                         },
                         {text: 'Ok'},
                     ]);
@@ -693,14 +695,16 @@ class MapComponent extends React.Component {
             myfuncs.myRepo(error);
         }
     };
+    reserveThisSpot = (space) => {
+        console.log("Reserve this spot");
+    };
     onPressMyParkingSpot = () => {
         try {
             myfuncs.myBreadCrumbs('onPressMyParkingSpot', this.props.navigation.state.routeName);
 
-            Alert.alert("My last saved parked location",null,
+            Alert.alert("Current parked location","You also may drag the Park icon to a new location",
                 [
-                    { text: 'Clear saved location', onPress: () => {this.props.onClearParkingSpot()} },
-                    { text: 'Post to others my departure time', onPress: () => {this.props.onDepartingShortlyPress()} },
+                    {text: 'Clear saved location', onPress: () => {this.props.onSaveParkedLocation(0)} },
                     {text: 'Ok'},
                 ]);
 
@@ -708,10 +712,34 @@ class MapComponent extends React.Component {
             myfuncs.myRepo(error);
         }
     };
-    // leavingShortly = () => {
-    //     console.log("perform Leaving shortly");
-    //     myfuncs.addFirestoreLeavingRcd(this.props.location);
-    // };
+    onUserParkingDragged = (e) => {
+        let newCoord = e.nativeEvent.coordinate;
+        // console.log("New:", newCoord);
+        // console.log("Old:", this.props.parkedLocation);
+
+        let distance = myfuncs.calcDistance(newCoord, this.props.parkedLocation);
+        console.log("Moved it ", distance, " meters");
+        if (distance > 3) {
+            Alert.alert("Save your new parked location?",null,
+                [
+                    {text: 'Cancel', onPress: () => {this.refreshParkedIcon()} },
+                    {text: 'Yes', onPress: () => {this.props.onSaveParkedLocation(newCoord)}},
+                ]);
+        } else {
+            this.refreshParkedIcon();
+        }
+    };
+    refreshParkedIcon = () => {
+        let tCoord = {...this.props.parkedLocation};
+        // console.log("tCoord:", tCoord);
+        tCoord.latitude += 0.00000000001;
+        // console.log("tCoord:", tCoord);
+
+        this.props.updateParkedLocation(tCoord);
+
+        this.setState({parkedLocation: this.props.parkedLocation});
+
+    };
     render() {
         try {
             myfuncs.myBreadCrumbs('render', "MapComponent");
@@ -798,6 +826,7 @@ class MapComponent extends React.Component {
                                     title={space.name}
                                     description={"Headed"}
                                     onPress={() => this.onPressSpace(space)}
+                                    anchor={{x: 0.5, y: 0.5}}   // This puts the Android image in center.
                                 >
                                     <Image style={[styles.imageContainer,
                                         {width: space.width, height: space.height, resizeMode: 'contain'}]}
@@ -811,13 +840,16 @@ class MapComponent extends React.Component {
 
                             {myfuncs.isLocationValid(this.state.parkedLocation) &&
                                 <MapView.Marker
+                                    draggable
+                                    onDragEnd={this.onUserParkingDragged}
                                     coordinate={{
-                                        longitude: this.state.parkedLocation.coords.longitude,
-                                        latitude: this.state.parkedLocation.coords.latitude
+                                        longitude: this.state.parkedLocation.longitude,
+                                        latitude: this.state.parkedLocation.latitude
                                     }}
-                                    title={"My last saved parked location"}
-                                    // description={"More msgs data"}
+                                    title={"Current parked location"}
+                                    description={"You may drag the Parked icon to a new location"}
                                     onPress={() => this.onPressMyParkingSpot()}
+                                    anchor={{x: 0.5, y: 0.5}}   // This puts the Android image in center.
                                 >
                                     <Image source={parkIcon}
                                            style={{
@@ -880,6 +912,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = dispatch => (
     bindActionCreators({
         updateLocation,
+        updateParkedLocation,
     }, dispatch)
 );
 export default connect(mapStateToProps, mapDispatchToProps)(MapComponent);

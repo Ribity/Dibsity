@@ -1,6 +1,6 @@
 import MyDefines from "../constants/MyDefines";
 
-const INITIAL_STATE = null;
+const INITIAL_STATE = 0;
 
 let parkedLocationReducer;
 export default parkedLocationReducer = (state = INITIAL_STATE, action) => {

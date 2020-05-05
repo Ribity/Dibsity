@@ -22,7 +22,6 @@ import ApiKeys from "../constants/ApiKeys";
 
 import {SaveParkedIcon} from "../components/SaveParkedIcon";
 import {DepartParkedIcon} from "../components/DepartParkedIcon";
-import {MyButton} from "../components/MyButton";
 import * as Constants from "expo-constants";
 
 // The following code was added because the latest firestore has bugs/exceptions (crypto) with react native.
@@ -228,25 +227,43 @@ class MapScreen extends React.Component {
                 "If not, please remember to save your location the next time you park.",
                 [
                     {text: 'No'},
-                    {text: 'Yes', onPress: () => {this.saveParkedLocation()}},
+                    {text: 'Yes', onPress: () => {this.saveParkedLocation(false)}},
                 ]);
         } catch (error) {
             myfuncs.myRepo(error);
         }
     };
-    saveParkedLocation = () => {
+    clearParkedLocation = () => {
+        console.log("Clear parking spot");
+        this.saveParkedLocation(true);
+    };
+    saveParkedLocation = (bClearLocation) => {
         try {
             myfuncs.myBreadCrumbs('saveParkedLocation', this.props.navigation.state.routeName);
 
             console.log("Saving parking location");
 
-            // this.props.updateParkedLocation(this.props.location);                        // mk1 this is the real one.
-            // myfuncs.writeUserDataToLocalStorage("parkedLocation", this.props.location);  // mk1 this is the real one
-            this.props.updateParkedLocation(MyDefines.fake_parked_location);
-            myfuncs.writeUserDataToLocalStorage("parkedLocation", MyDefines.fake_parked_location );
-            this.setState({userSavedParkingLocation: true});
-            this.refs.toast.show("Parking Location Saved", 3000);
-            this.refs.toastCenter.show("Parking Location Saved", 3000);
+            if (bClearLocation) {
+
+                // mk1 need to write code to clear parking spot from storage, and read it upon init
+
+                this.props.updateParkedLocation(0);
+                myfuncs.writeUserDataToLocalStorage("parkedLocation", 0);
+                this.setState({userSavedParkingLocation: false});
+                this.refs.toast.show("Parking Location Cleared", 3000);
+                this.refs.toastCenter.show("Parking Location Cleared", 3000);
+            } else {
+                if (MyDefines.fakeParkedLocation === true) {
+                    this.props.updateParkedLocation(MyDefines.fake_parked_location);
+                    myfuncs.writeUserDataToLocalStorage("parkedLocation", MyDefines.fake_parked_location);
+                } else {
+                    this.props.updateParkedLocation(this.props.location);
+                    myfuncs.writeUserDataToLocalStorage("parkedLocation", this.props.location);
+                }
+                this.setState({userSavedParkingLocation: true});
+                this.refs.toast.show("Parking Location Saved", 3000);
+                this.refs.toastCenter.show("Parking Location Saved", 3000);
+            }
 
         } catch (error) {
             myfuncs.myRepo(error);
@@ -267,6 +284,7 @@ class MapScreen extends React.Component {
                         {(this.state.readyToGo === true && MyDefines.default_tasks.refresh_map === false) &&
                         <MapComponent navigation={this.props.navigation}
                                       onDepartingShortlyPress={this.onDepartingShortlyPress}
+                                      onClearParkingSpot={this.clearParkedLocation}
                         />
                         }
                         {(this.state.readyToGo === true && MyDefines.default_tasks.refresh_map === false) &&
@@ -355,7 +373,7 @@ class MapScreen extends React.Component {
             myfuncs.myBreadCrumbs('DepartingMinutesPressed', this.props.navigation.state.routeName);
             this.setState({isDepartingShortlyModalVisible: false});
 
-            myfuncs.addFirestoreDepartingRcd(this.props.location, minutes);
+            myfuncs.addFirestoreDepartingRcd(this.props.parkedLocation, minutes);
         } catch (error) {
             myfuncs.myRepo(error);
         }
@@ -376,7 +394,8 @@ const styles = StyleSheet.create({
 const mapStateToProps = (state) => {
     const { settings } = state;
     const { location } = state;
-    return { settings, location }
+    const { parkedLocation } = state;
+    return { settings, location, parkedLocation}
 };
 const mapDispatchToProps = dispatch => (
     bindActionCreators({

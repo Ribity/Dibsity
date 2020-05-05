@@ -278,17 +278,22 @@ class myFuncs  {
         }
     };
     calcDistance = (coord1, coord2) => {
-        let distance = geolib.getDistance(
-            {
-                "latitude": coord1.latitude,
-                "longitude": coord1.longitude
-            },
-            {
-                "latitude": coord2.latitude,
-                "longitude": coord2.longitude
-            },
-            1);
-        return distance;
+        try {
+            let distance = geolib.getDistance(
+                {
+                    "latitude": coord1.latitude,
+                    "longitude": coord1.longitude
+                },
+                {
+                    "latitude": coord2.latitude,
+                    "longitude": coord2.longitude
+                },
+                1);
+            return distance;
+        } catch (error) {
+            this.myRepo(error);
+            return 0;
+        }
     };
     reviewChosen = async () => {
         await hardStorage.setKey("reviewedApp", true);

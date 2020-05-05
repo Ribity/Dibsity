@@ -12,9 +12,9 @@ export {MapComponent};
 export {TasksComponent};
 
 // The following nine lines are to ignore a warning that Android receives about setting a timer for long periods.
-import { YellowBox } from 'react-native';
+// import { YellowBox } from 'react-native';
 // import _ from 'lodash';
-YellowBox.ignoreWarnings(['Setting a timer']);
+// YellowBox.ignoreWarnings(['Setting a timer']);
 // const _console = _.clone(console);
 // console.warn = message => {
 //     if (message.indexOf('Setting a timer') <= -1) {

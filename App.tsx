@@ -1,8 +1,6 @@
 import React from 'react';
 import { AppNavigator } from './navigation';
 
-// import { default as customMapping } from './custom-mapping.json'; // <-- import custom mapping
-
 import { Provider } from 'react-redux';
 import { rootReducer } from './reducers/RootReducer'
 import { createStore } from 'redux';
@@ -10,6 +8,11 @@ import { createStore } from 'redux';
 const store = createStore(rootReducer);
 
 const App = () => {
+   // To get rid of Timer Settings warning on Android
+   // Go to node_modules/react-native/Libraries/Core/Timer/JSTimers.js
+   // Look for the variable MAX_TIMER_DURATION_MS
+   // Change 60 * 1000 to 10000 * 1000
+
     return (
                 <Provider store={store}>
                         <AppNavigator/>

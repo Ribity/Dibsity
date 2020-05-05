@@ -4,7 +4,7 @@ import * as Permissions from 'expo-permissions';
 import * as Location from 'expo-location';
 import MapView from 'react-native-maps';
 import Constants from 'expo-constants';
-import MyButton from "./MyButton";
+import {MyButton} from "./MyButton";
 
 import * as firebase from "firebase";
 // import firebase from 'firebase';
@@ -58,6 +58,7 @@ class MapComponent extends React.Component {
                 locationResult: null,
                 spaces: [],
                 parkedLocation: null,
+                iconOpacity: 1.0,
 
                 bearing: 0,
                 initRegion: null,
@@ -212,8 +213,8 @@ class MapComponent extends React.Component {
                 this.fakeLocation.coords.latitude = 35.91057;
                 this.fakeLocation.coords.longitude = -78.69085;
             } else {
-                let lat = this.fakeLocation.coords.latitude + .0001;
-                let lon = this.fakeLocation.coords.longitude + .0001;
+                let lat = this.fakeLocation.coords.latitude + .001;
+                let lon = this.fakeLocation.coords.longitude + .001;
                 this.fakeLocation.coords.latitude = (Math.round(lat * 100000) / 100000);
                 this.fakeLocation.coords.longitude = (Math.round(lon * 100000) / 100000);
                 if (this.fakeLocation.coords.heading < 344)
@@ -222,6 +223,7 @@ class MapComponent extends React.Component {
                     this.fakeLocation.coords.heading -= 345;
             }
             this.fakeCount++;
+            console.log("FakeCount:", this.fakeCount);
 
         // console.log(this.fakeLocation.coords);
         if (myfuncs.isLocationValid(this.fakeLocation)) {
@@ -360,26 +362,62 @@ class MapComponent extends React.Component {
         let bModified = false;
         let tSpaces = [...this.state.spaces];
         let minsRemaining;
+        let bMakeIconOpaque = false;
         for (let i=tSpaces.length-1; i>=0; i--) {
-            minsRemaining = this.calcRemainingMinutes(tSpaces[i].secsDeparting);
+            minsRemaining = this.calcRemainingMinutes(tSpaces[i].secsDeparting, 9999);
             if (minsRemaining >= 0) {
                 tSpaces[i].minsRemaining = minsRemaining;
+                this.setMinutesRemainingIcon(tSpaces[i]);
+                let distance = myfuncs.calcDistance(
+                    {"latitude": tSpaces[i].latitude, "longitude": tSpaces[i].longitude},
+                    this.props.location.coords);
+                if (distance < 400) {
+                    bMakeIconOpaque = true;
+                }
             } else {
                 console.log("splice out space");
                 tSpaces.splice(i, 1);
             }
             bModified = true;
         }
-        if (bModified)
+        if (bModified) {
             await this.setState({spaces: tSpaces});
+        }
+        if (bMakeIconOpaque)
+            this.setState({iconOpacity: 0.4})
+        else
+            this.setState({iconOpacity: 1.0})
     };
-    calcRemainingMinutes = (secsDeparting) => {
+    setMinutesRemainingIcon = (spaceRcd) => {
+
+        let mins = spaceRcd.minsRemaining;
+        let addition = (10-mins)*3;
+        let base = 12;
+
+        if (mins === 0)
+            addition = 9;
+
+        spaceRcd.fColor = "orange";
+        spaceRcd.bgColor = "green";
+        // spaceRcd.fColor = "black";
+        // spaceRcd.bgColor = "orange";
+
+        spaceRcd.fSize = base+addition;
+        spaceRcd.width = base+addition;
+        spaceRcd.height = base+addition;
+    };
+    calcRemainingMinutes = (secsDeparting, rcdMins) => {
         let mySecs = new Date().getTime() / 1000;
         mySecs = Math.trunc(mySecs);
         let minsRemaining = ((secsDeparting - mySecs) / 60) + 1;
 
-        console.log("departingSec:", secsDeparting);
-        console.log("nowSec:", mySecs);
+        // console.log("departingSec:", secsDeparting);
+        // console.log("nowSec:", mySecs);
+
+        // console.log("rcdMins:", rcdMins);
+        if (minsRemaining > rcdMins)    // This prevents a potential quick display of mins that is greater than what user entered.
+            minsRemaining = rcdMins;
+
         return(Math.trunc(minsRemaining));
     };
     addSpace = (devId, rcd, idx) => {
@@ -388,9 +426,9 @@ class MapComponent extends React.Component {
             let bAddIt = true;
             let bModified = false;
             let secsDeparting = rcd.dateTime.seconds + rcd.departingMinutes*60;
-            let minsRemaining = this.calcRemainingMinutes(secsDeparting);
-            console.log("minsRemaining:", minsRemaining);
-            console.log("addSpace Listener", idx, ":RCD:", rcd);
+            let minsRemaining = this.calcRemainingMinutes(secsDeparting, rcd.departingMinutes);
+            // console.log("minsRemaining:", minsRemaining);
+            // console.log("addSpace Listener", idx, ":RCD:", rcd);
             // console.log("addSpace Listener", idx, ":ID:", devId);
             console.log("addSpace Listener", idx, ":TEN", this.listenerTenMinutes[idx]);
 
@@ -400,10 +438,10 @@ class MapComponent extends React.Component {
             let joined = this.state.spaces;
             let index = joined.findIndex(space => space.key === devId);
             if (index >= 0) {
-                console.log("found previous devId space tenMinutes:", joined[index].tenMinutes);
+                // console.log("found previous devId space tenMinutes:", joined[index].tenMinutes);
                 if (joined[index].tenMinutes < this.listenerTenMinutes[idx] ) {
                     joined.splice(index, 1);
-                    console.log("delete previous devId space:");
+                    // console.log("delete previous devId space:");
                     bAddIt = true;
                     bModified = true;
                 } else {
@@ -425,11 +463,7 @@ class MapComponent extends React.Component {
                 newSpace.name = rcd.name;
                 newSpace.minsRemaining = minsRemaining;
                 newSpace.secsDeparting = secsDeparting;
-                newSpace.fColor = "red";
-                newSpace.fSize = 45;
-                newSpace.bgColor = "green";
-                newSpace.width = 45;
-                newSpace.height = 45;
+                this.setMinutesRemainingIcon(newSpace);
 
                 joined = joined.concat(newSpace);
             }
@@ -663,9 +697,10 @@ class MapComponent extends React.Component {
         try {
             myfuncs.myBreadCrumbs('onPressMyParkingSpot', this.props.navigation.state.routeName);
 
-            Alert.alert("You are currently parked here",null,
+            Alert.alert("My last saved parked location",null,
                 [
-                    { text: 'Post others that I am departing soon', onPress: () => {this.props.onDepartingShortlyPress()} },
+                    { text: 'Clear saved location', onPress: () => {this.props.onClearParkingSpot()} },
+                    { text: 'Post to others my departure time', onPress: () => {this.props.onDepartingShortlyPress()} },
                     {text: 'Ok'},
                 ]);
 
@@ -714,14 +749,15 @@ class MapComponent extends React.Component {
                             <View style={{paddingTop: 30}}/>
                             <Text style={myStyles.myText}>Many Dibsity functionalities are disabled.</Text>
                             <View style={{paddingTop: 30}}/>
-                            <Text style={myStyles.myText}>We will NOT sell your data</Text>
+                            <Text style={myStyles.myText}>Note, we will NOT sell your data</Text>
                             <View style={{paddingTop: 30}}/>
-
                             <Text style={myStyles.myText}>Please go to Settings on your device and allow the Dibsity app access your location</Text>
 
                             <View style={{paddingTop: 30}}/>
-                            <MyButton title={'  Try again  '}
-                                      onPress={this._getLocationAsync}/>
+
+                            <MyButton onPress={this._getLocationAsync}
+                                      title={"  Try again  "}
+                            />
                         </View>
                     :
                     (this.state.initRegion === null) ?
@@ -736,46 +772,6 @@ class MapComponent extends React.Component {
                             showsScale={true}
                             showsCompass={true}
                         >
-                            {this.state.spaces.map((space, index) => (
-                                <MapView.Marker
-                                    key={index}
-                                    coordinate={{longitude: space.longitude, latitude: space.latitude}}
-                                    title={space.name}
-                                    description={"Headed"}
-                                    onPress={() => this.onPressSpace(space)}
-                                >
-                                    <Image style={[styles.imageContainer,
-                                        {width: space.width, height: space.height, resizeMode: 'contain'}]}
-                                    />
-                                    <View style={[styles.overlay, {backgroundColor: space.bgColor}]} />
-                                    <View style={styles.rectText}>
-                                        <Text style={{ color: space.fColor, fontWeight: 'bold', fontSize: space.fSize}}>{space.minsRemaining}</Text>
-                                    </View>
-                                </MapView.Marker>
-                            ))}
-
-                            {myfuncs.isLocationValid(this.state.parkedLocation) &&
-                                <MapView.Marker
-                                    coordinate={{
-                                        longitude: this.state.parkedLocation.coords.longitude,
-                                        latitude: this.state.parkedLocation.coords.latitude
-                                    }}
-                                    title={"You are parked here"}
-                                    // description={"More msgs data"}
-                                    onPress={() => this.onPressMyParkingSpot()}
-                                >
-                                    <Image source={parkIcon}
-                                           style={{
-                                               width: 20,
-                                               height: 20,
-                                               resizeMode: 'contain',
-                                               zIndex: 10,
-                                           }}
-                                    />
-
-                                </MapView.Marker>
-                            }
-
                             <MapView.Marker.Animated
                                 coordinate={this.state.coordinate}
                                 style={{
@@ -790,11 +786,50 @@ class MapComponent extends React.Component {
                                            width: rWidth,
                                            height: rHeight,
                                            resizeMode: 'contain',
-                                           opacity: .4,
-                                           zIndex: 3,
+                                           opacity: this.state.iconOpacity,
                                        }}
                                 />
                             </MapView.Marker.Animated>
+
+                            {this.state.spaces.map((space, index) => (
+                                <MapView.Marker
+                                    key={index}
+                                    coordinate={{longitude: space.longitude, latitude: space.latitude}}
+                                    title={space.name}
+                                    description={"Headed"}
+                                    onPress={() => this.onPressSpace(space)}
+                                >
+                                    <Image style={[styles.imageContainer,
+                                        {width: space.width, height: space.height, resizeMode: 'contain'}]}
+                                    />
+                                    <View style={[styles.overlay, {backgroundColor: space.bgColor}]} />
+                                    <View style={styles.rectText}>
+                                        <Text style={{color: space.fColor, fontWeight: 'bold', fontSize: space.fSize}}>{space.minsRemaining}</Text>
+                                    </View>
+                                </MapView.Marker>
+                            ))}
+
+                            {myfuncs.isLocationValid(this.state.parkedLocation) &&
+                                <MapView.Marker
+                                    coordinate={{
+                                        longitude: this.state.parkedLocation.coords.longitude,
+                                        latitude: this.state.parkedLocation.coords.latitude
+                                    }}
+                                    title={"My last saved parked location"}
+                                    // description={"More msgs data"}
+                                    onPress={() => this.onPressMyParkingSpot()}
+                                >
+                                    <Image source={parkIcon}
+                                           style={{
+                                               width: 20,
+                                               height: 20,
+                                               resizeMode: 'contain',
+                                           }}
+                                    />
+
+                                </MapView.Marker>
+                            }
+
                         </MapView>
 
                 );
@@ -811,6 +846,7 @@ const styles = StyleSheet.create({
     bigMap: {
         alignSelf: 'stretch',
         height: (height - MyDefines.myStatusBarHeight),
+        ...StyleSheet.absoluteFillObject,   // This allows the spaces Icons to be displayed on top of the little frog tracker.
     },
     rectText: {
         position: 'absolute',
@@ -829,7 +865,7 @@ const styles = StyleSheet.create({
     },
     overlay: {
         ...StyleSheet.absoluteFillObject,
-        borderRadius: 10,
+        borderRadius: 5,
         // backgroundColor: 'lightgreen',
     }
 });

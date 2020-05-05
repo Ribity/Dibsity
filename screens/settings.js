@@ -20,7 +20,10 @@ class SettingsScreen extends React.Component {
         try {
             myfuncs.myBreadCrumbs('navigationOptions', 'SettingsScreen');
             return {
-                headerLeft: () => <MyButton onPress={() => navigation.navigate("About")} title={"About"}/>,
+                headerLeft: () => <MyButton onPress={() => navigation.navigate("About")}
+                                            title={"About"}
+                                            buttonStyle={null}
+                                            textStyle={null} />,
                 headerTitle: () => <ScreenTitle title={"Settings"} privacy={() => navigation.navigate("PrivacySettings")}/>,
             };
         } catch (error) {

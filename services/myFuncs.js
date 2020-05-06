@@ -194,7 +194,7 @@ class myFuncs  {
             myfuncs.myRepo(error);
         }
     };
-    addFirestoreDepartingRcd = async (location, departingMinutes) => {
+    addFirestoreDepartingRcd = async (location, departingMinutes, bUpdate) => {
         try {
             let geofirestore;
 
@@ -224,14 +224,56 @@ class myFuncs  {
             // geocollection.add({     // This let's the database create a unique record, or I create unique record below
             let uniqueKey = Constants.default.deviceId;
             // let uniqueKey = Constants.default.deviceId;
-            let myTemp = geocollection.doc(uniqueKey).set({
-                name: 'Red Volkswagen',
-                dateTime: new Date(),
-                departingMinutes: departingMinutes,
-                // date3: firebase.firestore.Timestamp.fromDate(new Date()),
-                score: 100,
-                coordinates: new firebase.firestore.GeoPoint(location.coords.latitude, location.coords.longitude)
-            });
+            if (bUpdate !== true) {
+                let myTemp = geocollection.doc(uniqueKey).set({
+                    name: 'Red Volkswagen',
+                    dateTime: new Date(),
+                    departingMinutes: departingMinutes,
+                    // date3: firebase.firestore.Timestamp.fromDate(new Date()),
+                    score: 100,
+                    coordinates: new firebase.firestore.GeoPoint(location.latitude, location.longitude)
+                });
+            } else {
+                console.log("mk1 you need to write the code to UPDATE the record, so dibs are kept, etc");
+            }
+
+        } catch (error) {
+            myfuncs.myRepo(error);
+        }
+    };
+    updateFirestoreReservedRcd = async (space, bDibs) => {
+        try {
+            let geofirestore;
+
+            this.myBreadCrumbs('updateFirestoreReservedRcd', "myfuncs");
+
+            console.log("updateFirestore");
+            if (myfirestore === null)   // This should never be null, because we init at init.
+                this.initFirebase();
+
+            try {
+                geofirestore = new GeoFirestore(myfirestore);
+            }  catch (error) {
+                console.log("myFuncs geofireStore update Exception. init'ing again");
+                this.initFirebase();
+                geofirestore = new GeoFirestore(myfirestore);
+                this.myBreadCrumbs('Update init again', "myfuncs");
+                myfuncs.myRepo(error);
+            }
+            let cName = myfuncs.getCollectionName(0);
+            let geocollection = geofirestore.collection(ApiKeys.firebase_collection).
+            doc(cName).collection(space.tenMinutes.toString());
+
+            // geocollection.add({     // This let's the database create a unique record, or I create unique record below
+
+            let devId = Constants.default.deviceId;
+            if (bDibs === false)
+                devId = 0;
+            console.log(cName, "-", space.tenMinutes, "-", space.key,  ": updating Dibs:", bDibs);
+            geocollection.doc(space.key).update({
+                dibs: bDibs,
+                dibsDevId: devId,
+        });
 
         } catch (error) {
             myfuncs.myRepo(error);
@@ -280,6 +322,8 @@ class myFuncs  {
     };
     calcDistance = (coord1, coord2) => {
         try {
+            // console.log("coord1:", coord1);
+            // console.log("coord2:", coord2);
             let distance = geolib.getDistance(
                 {
                     "latitude": coord1.latitude,

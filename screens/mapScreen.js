@@ -373,12 +373,12 @@ class MapScreen extends React.Component {
             myfuncs.myRepo(error);
         }
     };
-    DepartingMinutesPressed = (minutes) => {
+    DepartingMinutesPressed = (minutes, bUpdate) => {
         try {
             myfuncs.myBreadCrumbs('DepartingMinutesPressed', this.props.navigation.state.routeName);
             this.setState({isDepartingShortlyModalVisible: false});
 
-            myfuncs.addFirestoreDepartingRcd(this.props.parkedLocation, minutes);
+            myfuncs.addFirestoreDepartingRcd(this.props.parkedLocation, minutes, bUpdate);  // mk1 need to get bUpdate value correct.
         } catch (error) {
             myfuncs.myRepo(error);
         }

@@ -60,6 +60,7 @@ class MapComponent extends React.Component {
                 spaces: [],
                 parkedLocation: null,
                 iconOpacity: 1.0,
+                displayParkedIcon: true,
 
                 bearing: 0,
                 initRegion: null,
@@ -364,6 +365,7 @@ class MapComponent extends React.Component {
         let tSpaces = [...this.state.spaces];
         let minsRemaining;
         let bMakeIconOpaque = false;
+        let bDisplayParkedIcon = true;
         for (let i=tSpaces.length-1; i>=0; i--) {
             minsRemaining = this.calcRemainingMinutes(tSpaces[i].secsDeparting, 9999);
             if (minsRemaining >= 0) {
@@ -375,19 +377,30 @@ class MapComponent extends React.Component {
                 if (distance < 300) {
                     bMakeIconOpaque = true;
                 }
+                distance = myfuncs.calcDistance(
+                    {"latitude": tSpaces[i].latitude, "longitude": tSpaces[i].longitude},
+                    this.props.parkedLocation);
+                if (distance < 3) { // If one of the spaces is MY parked space, don't show parked Icon
+                    bDisplayParkedIcon = false;
+                }
             } else {
                 console.log("splice out space");
                 tSpaces.splice(i, 1);
             }
             bModified = true;
         }
-        if (bModified) {
+
+        if (bModified)
             await this.setState({spaces: tSpaces});
-        }
+
         if (bMakeIconOpaque)
-            this.setState({iconOpacity: 0.4})
+            this.setState({iconOpacity: 0.4});
         else
-            this.setState({iconOpacity: 1.0})
+            this.setState({iconOpacity: 1.0});
+
+        if (bDisplayParkedIcon !== this.state.displayParkedIcon)
+            this.setState({displayParkedIcon: bDisplayParkedIcon});
+
     };
     setMinutesRemainingIcon = (spaceRcd) => {
 
@@ -398,16 +411,19 @@ class MapComponent extends React.Component {
         if (mins === 0)
             addition = 9;
 
-        if (mins < 5) {
-            spaceRcd.fColor = "orange";
-            spaceRcd.bgColor = "green";
-        } else {
+        if (spaceRcd.dibs) {    // If someone has it reserved, show as yellow
             spaceRcd.fColor = "tan";
             // spaceRcd.bgColor = "khaki";
-
             // spaceRcd.fColor = "grey";
             // spaceRcd.fColor = "silver";
             spaceRcd.bgColor = "gold";
+            addition = 15;
+        } else {
+            spaceRcd.fColor = "orange";
+            if (mins > 5)
+                spaceRcd.bgColor = "lightgreen";
+            else
+                spaceRcd.bgColor = "green";
         }
 
         spaceRcd.fSize = base+addition;
@@ -471,6 +487,8 @@ class MapComponent extends React.Component {
                 newSpace.name = rcd.name;
                 newSpace.minsRemaining = minsRemaining;
                 newSpace.secsDeparting = secsDeparting;
+                newSpace.dibs = rcd.dibs;
+                newSpace.dibsDevId = rcd.dibsDevId;
                 this.setMinutesRemainingIcon(newSpace);
 
                 joined = joined.concat(newSpace);
@@ -663,40 +681,49 @@ class MapComponent extends React.Component {
         try {
             myfuncs.myBreadCrumbs('onPressMarker', this.props.navigation.state.routeName);
 
-            // Loop thru all spaces. If other spaces withing 30 feet, show list of those spaces.
-            // Else there's only one space at this location, so show it's pop-up
-            // let matchList = [];
-            // for (let spaceObj of this.state.spaces) {
-            //     let distance = myfuncs.calcDistance(
-            //         {"latitude": space.latitude, "longitude": space.longitude},
-            //         {"latitude": spaceObj.latitude, "longitude": spaceObj.longitude});
-            //
-            //     if (distance < MyDefines.default_client_parms.map_group_meters) {
-            //         matchList.push(spaceObj);
-            //     }
-            // }
-
-
-            // let destination = "";
-            // let public_message = "";
-            // if (space.end_address !== "")
-            //     destination = '\r\nDestination: ' + space.end_address;
-            // if (space.public_message !== "")
-            //     public_message = '\r\n' + space.public_message;
-
-            // console.log(e);
-                Alert.alert(space.name, 'Vehicle: Blue Prius',
+            let distance = myfuncs.calcDistance({"latitude": space.latitude, "longitude": space.longitude},
+                this.props.location.coords);
+            // console.log("Distance from space: ", distance);
+            if (space.dibs === true) {
+                if (space.dibsDevId === Constants.deviceId) {
+                    Alert.alert(space.name, null,
+                        [
+                            {
+                                text: 'UN - Reserve This Spot?', onPress: () => {
+                                    this.reserveThisSpot(space, false)
+                                }
+                            },
+                            {text: 'Ok'},
+                        ]);
+                } else {
+                    Alert.alert(space.name, "Someone already reserved this spot",
+                        [
+                            {text: 'Ok'},
+                        ]);
+                }
+            } else if (distance < 25) {
+                Alert.alert(space.name, null,
                     [
-                        {text: 'Reserve This Spot', onPress: () => {this.reserveThisSpot(space)}
+                        {
+                            text: 'Reserve This Spot', onPress: () => {
+                                this.reserveThisSpot(space, true)
+                            }
                         },
                         {text: 'Ok'},
                     ]);
+            } else {
+                Alert.alert(space.name, 'You must be within 25 meters to reserve this spot',
+                    [
+                        {text: 'Ok'},
+                    ]);
+            }
         } catch (error) {
             myfuncs.myRepo(error);
         }
     };
-    reserveThisSpot = (space) => {
-        console.log("Reserve this spot");
+    reserveThisSpot = (space, bDibs) => {
+        console.log("Reserve this spot:", space.tenMinutes);
+        myfuncs.updateFirestoreReservedRcd(space, bDibs);
     };
     onPressMyParkingSpot = () => {
         try {
@@ -753,6 +780,10 @@ class MapComponent extends React.Component {
             }
             let rWidth  = 23;
             let rHeight = 23;
+            if (this.state.iconOpacity < 1) {
+                rWidth = 12;
+                rHeight = 12;
+            }
             // if (Platform.OS === 'android') {
             //     rWidth = 15;
             //     rHeight = 15;
@@ -824,7 +855,7 @@ class MapComponent extends React.Component {
                                     key={index}
                                     coordinate={{longitude: space.longitude, latitude: space.latitude}}
                                     title={space.name}
-                                    description={"Headed"}
+                                    // description={"Headed"}
                                     onPress={() => this.onPressSpace(space)}
                                     anchor={{x: 0.5, y: 0.5}}   // This puts the Android image in center.
                                 >
@@ -838,7 +869,7 @@ class MapComponent extends React.Component {
                                 </MapView.Marker>
                             ))}
 
-                            {myfuncs.isLocationValid(this.state.parkedLocation) &&
+                            {this.state.displayParkedIcon && myfuncs.isLocationValid(this.state.parkedLocation) &&
                                 <MapView.Marker
                                     draggable
                                     onDragEnd={this.onUserParkingDragged}

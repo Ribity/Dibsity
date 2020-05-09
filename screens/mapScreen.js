@@ -88,10 +88,10 @@ class MapScreen extends React.Component {
             myfuncs.myRepo(error);
         }
     }
-    componentWillUnmount() {
-        if (this.onAuthStateChangedUnsubscribe)
-            this.onAuthStateChangedUnsubscribe();
-    }
+    // componentWillUnmount() {
+    //     if (this.onAuthStateChangedUnsubscribe)
+    //         this.onAuthStateChangedUnsubscribe();
+    // }
     getUserStoredData = async () => {
         try {
             myfuncs.myBreadCrumbs('getUserStoredData', this.props.navigation.state.routeName);
@@ -373,12 +373,15 @@ class MapScreen extends React.Component {
             myfuncs.myRepo(error);
         }
     };
-    DepartingMinutesPressed = (minutes, bUpdate) => {
+    DepartingMinutesPressed = (minutes) => {
         try {
             myfuncs.myBreadCrumbs('DepartingMinutesPressed', this.props.navigation.state.routeName);
+            let bUpdate = false;
+            let previousTen = null;
+
             this.setState({isDepartingShortlyModalVisible: false});
 
-            myfuncs.addFirestoreDepartingRcd(this.props.parkedLocation, minutes, bUpdate);  // mk1 need to get bUpdate value correct.
+            myfuncs.addFirestoreDepartingRcd(this.props.parkedLocation, minutes, bUpdate, previousTen);  // mk1 need to get bUpdate value correct.
         } catch (error) {
             myfuncs.myRepo(error);
         }

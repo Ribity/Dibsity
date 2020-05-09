@@ -1,5 +1,5 @@
 import hardStorage from "./deviceStorage";
-import {Platform} from 'react-native'
+import {Alert, Platform} from 'react-native'
 import * as Sentry from "sentry-expo";
 import MyDefines from '../constants/MyDefines';
 import { Audio } from 'expo-av';
@@ -194,7 +194,20 @@ class myFuncs  {
             myfuncs.myRepo(error);
         }
     };
-    addFirestoreDepartingRcd = async (location, departingMinutes, bUpdate) => {
+
+
+
+    // Got a problem. If they are UPDATING their departure time, we need to see if the
+    // existing spaces[] record for thie device is in the previous tenMinutes or this
+    // ten minjtes.  If previous, we need to preserve the dibs and dibsDeviId from
+    // previous tenMinutes space. We can do this in the db.transaction by passing
+    // a parm that says bPreservePreviousRecord. We will know bPreservePreviousRecord
+    // true/false by searching state.spaces for this devId and if found and the
+    // tenMinutes is NOT equal to this tenMinutes, set bPreservPreviousRecord to true
+    // and then the db.transaction knows to read the previous tenMinutes.
+    // Or have a small exposure and just preserve the dibs and devId from the state.spaces
+    // which has the exposure of ships passing in the night.
+    addFirestoreDepartingRcd = async (location, departingMinutes, bUpdate, previousTen) => {
         try {
             let geofirestore;
 
@@ -217,33 +230,79 @@ class myFuncs  {
             let geocollection = geofirestore.collection(ApiKeys.firebase_collection).
                 doc(myfuncs.getCollectionName(0)).collection(tenMins.toString());
 
-            console.log("save parked button pressed: ", tenMins);
-            console.log("save departing in mintes:", departingMinutes);
+            console.log("save departing in mintes:", tenMins, ":", departingMinutes);
 
+            let rcd = {
+                name: 'Red',
+                    dateTime: new Date(),
+                departingMinutes: departingMinutes,
+                // date3: firebase.firestore.Timestamp.fromDate(new Date()),
+                score: 100,
+                coordinates: new firebase.firestore.GeoPoint(location.latitude, location.longitude)
+            };
 
             // geocollection.add({     // This let's the database create a unique record, or I create unique record below
-            let uniqueKey = Constants.default.deviceId;
             // let uniqueKey = Constants.default.deviceId;
             if (bUpdate !== true) {
-                let myTemp = geocollection.doc(uniqueKey).set({
-                    name: 'Red Volkswagen',
-                    dateTime: new Date(),
-                    departingMinutes: departingMinutes,
-                    // date3: firebase.firestore.Timestamp.fromDate(new Date()),
-                    score: 100,
-                    coordinates: new firebase.firestore.GeoPoint(location.latitude, location.longitude)
-                });
+                let myTemp = await geocollection.doc(Constants.default.deviceId).set(rcd);
+
             } else {
                 console.log("mk1 you need to write the code to UPDATE the record, so dibs are kept, etc");
+                await this.doDepartingTransaction(geocollection);
             }
 
         } catch (error) {
+            console.log("Firestore set error:", error);
             myfuncs.myRepo(error);
         }
     };
+    doDepartingTransaction = async (geocolleciton) => {
+    //     geofirestore.runTransaction(function(transaction) {
+    //         return transaction.get(sfDocRef).then(function(sfDoc) {
+    //             if (!sfDoc.exists) {
+    //                 throw "Document does not exist!";
+    //             }
+    //             var newPopulation = sfDoc.data().population + 1;
+    //             if (newPopulation <= 1000000) {
+    //                 transaction.update(sfDocRef, { population: newPopulation });
+    //                 return newPopulation;
+    //             } else {
+    //                 return Promise.reject("Sorry! Population is too big.");
+    //             }
+    //         });
+    //     }).then(function(newPopulation) {
+    //         console.log("Population increased to ", newPopulation);
+    //     }).catch(function(err) {
+    //         console.error(err);
+    //     });
+    };
+
+    // let sfDocRef = db.collection("cities").doc("SF");
+    // db.runTransaction(function(transaction) {
+    //     return transaction.get(sfDocRef).then(function(sfDoc) {
+    //         if (!sfDoc.exists) {
+    //             throw "Document does not exist!";
+    //         }
+    //         var newPopulation = sfDoc.data().population + 1;
+    //         if (newPopulation <= 1000000) {
+    //             transaction.update(sfDocRef, { population: newPopulation });
+    //             return newPopulation;
+    //         } else {
+    //             return Promise.reject("Sorry! Population is too big.");
+    //         }
+    //     });
+    // }).then(function(newPopulation) {
+    //     console.log("Population increased to ", newPopulation);
+    // }).catch(function(err) {
+    //     console.error(err);
+    // });
+
+
+
+
     updateFirestoreReservedRcd = async (space, bDibs) => {
         try {
-            let geofirestore;
+            let newFirestore;
 
             this.myBreadCrumbs('updateFirestoreReservedRcd', "myfuncs");
 
@@ -252,33 +311,89 @@ class myFuncs  {
                 this.initFirebase();
 
             try {
-                geofirestore = new GeoFirestore(myfirestore);
+                newFirestore = new firebase.firestore();
             }  catch (error) {
                 console.log("myFuncs geofireStore update Exception. init'ing again");
                 this.initFirebase();
-                geofirestore = new GeoFirestore(myfirestore);
+                newFirestore = new firebase.firestore();
                 this.myBreadCrumbs('Update init again', "myfuncs");
                 myfuncs.myRepo(error);
             }
             let cName = myfuncs.getCollectionName(0);
-            let geocollection = geofirestore.collection(ApiKeys.firebase_collection).
+            let collection = newFirestore.collection(ApiKeys.firebase_collection).
             doc(cName).collection(space.tenMinutes.toString());
 
-            // geocollection.add({     // This let's the database create a unique record, or I create unique record below
-
-            let devId = Constants.default.deviceId;
-            if (bDibs === false)
-                devId = 0;
+            // let devId = Constants.default.deviceId;
+            // if (bDibs === false)
+            //     devId = 0;
             console.log(cName, "-", space.tenMinutes, "-", space.key,  ": updating Dibs:", bDibs);
-            geocollection.doc(space.key).update({
-                dibs: bDibs,
-                dibsDevId: devId,
-        });
+
+            try {
+                await this.doReservedTransaction(newFirestore, collection, space.key, bDibs);
+                    // await geocollection.doc(space.key).update({
+                    //     dibs: bDibs,
+                    //     dibsDevId: devId,
+                    // });
+            }  catch (error) {
+                console.log("Caught the error:", error);
+            }
 
         } catch (error) {
+            console.log("Firestore update error:", error);
             myfuncs.myRepo(error);
         }
     };
+
+    // geocollection.doc(rKey).set(rcd);
+    // transaction.update(sfDocRef, { population: newPopulation });
+
+
+    doReservedTransaction = async (firestore, collection, rKey, bDibs) => {
+        let devId = Constants.default.deviceId;
+        let dMessage = null;
+        let bDoTheUpdate = false;
+        let retValue = 0;
+
+        firestore.runTransaction(function(transaction) {
+            return transaction.get(collection.doc(rKey)).then(function(existingDoc) {
+                if (!existingDoc.exists) {
+                    throw "Document does not exist!";
+                }
+                let eData = existingDoc.data().d;
+                if (bDibs === true) {
+                    if (eData.dibs !== true) {
+                        eData.dibs = true;
+                        eData.dibsDevId = devId;
+                        bDoTheUpdate = true;
+                    } else if (eData.dibsDevId !== devId) {
+                        return "Sorry, someone else already has the space reserved";
+                    } else {
+                        return "This space is already reserved for you";
+                    }
+                } else if (bDibs === false) {
+                    if ((eData.dibs === true) && (eData.dibsDevId === devId)) {
+                        eData.dibs = false;
+                        eData.dibsDevId = 0;
+                        bDoTheUpdate = true;
+                    }
+                }
+                if (bDoTheUpdate) {
+                    transaction.update(collection.doc(rKey), {d: eData});
+                    if (bDibs === true)
+                        return "Success. This space is currently reserved for you";
+                    else
+                        return "Space released for others";
+                }
+            });
+        }).then(function(dMessage) {
+            console.log("Successful dMessage:", dMessage);
+            if (dMessage !== null)
+                Alert.alert(dMessage);
+        }).catch(function(dMessage) {
+            console.log("Error dMessage:", dMessage);
+        });
+    };
+
     getCollectionName = (offset) => {
         let d = new Date();
         let n = d.getMonth() + 1;

@@ -452,7 +452,7 @@ class MapComponent extends React.Component {
             let secsDeparting = rcd.dateTime.seconds + rcd.departingMinutes*60;
             let minsRemaining = this.calcRemainingMinutes(secsDeparting, rcd.departingMinutes);
             // console.log("minsRemaining:", minsRemaining);
-            // console.log("addSpace Listener", idx, ":RCD:", rcd);
+            console.log("addSpace Listener", idx, ":RCD:", rcd);
             // console.log("addSpace Listener", idx, ":ID:", devId);
             console.log("addSpace Listener", idx, ":TEN", this.listenerTenMinutes[idx]);
 
@@ -680,7 +680,7 @@ class MapComponent extends React.Component {
     onPressSpace = (space) => {
         try {
             myfuncs.myBreadCrumbs('onPressMarker', this.props.navigation.state.routeName);
-
+            console.log("Space pressed");
             let distance = myfuncs.calcDistance({"latitude": space.latitude, "longitude": space.longitude},
                 this.props.location.coords);
             // console.log("Distance from space: ", distance);
@@ -688,12 +688,13 @@ class MapComponent extends React.Component {
                 if (space.dibsDevId === Constants.deviceId) {
                     Alert.alert(space.name, null,
                         [
+                            {text: 'Cancel'},
+
                             {
                                 text: 'UN - Reserve This Spot?', onPress: () => {
                                     this.reserveThisSpot(space, false)
                                 }
                             },
-                            {text: 'Ok'},
                         ]);
                 } else {
                     Alert.alert(space.name, "Someone already reserved this spot",
@@ -704,12 +705,12 @@ class MapComponent extends React.Component {
             } else if (distance < 25) {
                 Alert.alert(space.name, null,
                     [
+                        {text: 'Cancel'},
                         {
                             text: 'Reserve This Spot', onPress: () => {
                                 this.reserveThisSpot(space, true)
                             }
                         },
-                        {text: 'Ok'},
                     ]);
             } else {
                 Alert.alert(space.name, 'You must be within 25 meters to reserve this spot',
@@ -731,8 +732,8 @@ class MapComponent extends React.Component {
 
             Alert.alert("Current parked location","You also may drag the Park icon to a new location",
                 [
+                    {text: 'Cancel'},
                     {text: 'Clear saved location', onPress: () => {this.props.onSaveParkedLocation(0)} },
-                    {text: 'Ok'},
                 ]);
 
         } catch (error) {

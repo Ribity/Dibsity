@@ -14,7 +14,6 @@ import * as firebase from "firebase";
 import 'firebase/firestore';
 import {GeoFirestore} from "geofirestore";
 
-
 const SOUNDS = {};
 let SOURCES = {};
 let bSoundsAreLoaded = false;
@@ -45,6 +44,8 @@ class myFuncs  {
                     console.log("Successfully retrieved settings from Storage:", settings)
             }
             parkedLocation = await hardStorage.getKey("parkedLocation");
+            if (parkedLocation === 0)
+                parkedLocation = {};
 
             // console.log("init after");
 
@@ -198,7 +199,7 @@ class myFuncs  {
 
 
     // Got a problem. If they are UPDATING their departure time, we need to see if the
-    // existing spaces[] record for thie device is in the previous tenMinutes or this
+    // existing spaces[] record for this device is in the previous tenMinutes or this
     // ten minjtes.  If previous, we need to preserve the dibs and dibsDeviId from
     // previous tenMinutes space. We can do this in the db.transaction by passing
     // a parm that says bPreservePreviousRecord. We will know bPreservePreviousRecord
@@ -207,7 +208,7 @@ class myFuncs  {
     // and then the db.transaction knows to read the previous tenMinutes.
     // Or have a small exposure and just preserve the dibs and devId from the state.spaces
     // which has the exposure of ships passing in the night.
-    addFirestoreDepartingRcd = async (location, departingMinutes, bUpdate, previousTen) => {
+    addFirestoreDepartingRcd = async (location, departingMinutes, bUpdate, bPreviousTen) => {
         try {
             let geofirestore;
 
@@ -227,8 +228,6 @@ class myFuncs  {
                 this.myBreadCrumbs('Departing init again', "myfuncs");
                 myfuncs.myRepo(error);
             }
-            let geocollection = geofirestore.collection(ApiKeys.firebase_collection).
-                doc(myfuncs.getCollectionName(0)).collection(tenMins.toString());
 
             console.log("save departing in mintes:", tenMins, ":", departingMinutes);
 
@@ -244,11 +243,13 @@ class myFuncs  {
             // geocollection.add({     // This let's the database create a unique record, or I create unique record below
             // let uniqueKey = Constants.default.deviceId;
             if (bUpdate !== true) {
+                let geocollection = geofirestore.collection(ApiKeys.firebase_collection).
+                        doc(myfuncs.getCollectionName(0)).collection(tenMins.toString());
                 let myTemp = await geocollection.doc(Constants.default.deviceId).set(rcd);
 
             } else {
                 console.log("mk1 you need to write the code to UPDATE the record, so dibs are kept, etc");
-                await this.doDepartingTransaction(geocollection);
+                await this.doDepartingTransaction(geofirestore, bPreviousTen);
             }
 
         } catch (error) {
@@ -256,49 +257,47 @@ class myFuncs  {
             myfuncs.myRepo(error);
         }
     };
-    doDepartingTransaction = async (geocolleciton) => {
-    //     geofirestore.runTransaction(function(transaction) {
-    //         return transaction.get(sfDocRef).then(function(sfDoc) {
-    //             if (!sfDoc.exists) {
-    //                 throw "Document does not exist!";
-    //             }
-    //             var newPopulation = sfDoc.data().population + 1;
-    //             if (newPopulation <= 1000000) {
-    //                 transaction.update(sfDocRef, { population: newPopulation });
-    //                 return newPopulation;
-    //             } else {
-    //                 return Promise.reject("Sorry! Population is too big.");
-    //             }
-    //         });
-    //     }).then(function(newPopulation) {
-    //         console.log("Population increased to ", newPopulation);
-    //     }).catch(function(err) {
-    //         console.error(err);
-    //     });
+
+    dDepartingTransaction = async (geofirestore, bPreviousTen) => {
+        // let devId = Constants.default.deviceId;
+        // let dMessage = null;
+        // let bDoTheUpdate = false;
+        // let retValue = 0;
+        //
+        // let myTen = this.getTenMinuteInterval();
+        // let myCollection = this.getCollectionName(0);
+        // if (bPreviousTen) {
+        //     myTen--;
+        //     myCollection = myfuncs.getCollectionName(-1);
+        // }
+        //
+        // let geocollection = geofirestore.collection(ApiKeys.firebase_collection).
+        // doc(myCollection).collection(myTen.toString());
+        //
+        // geofirestore.runTransaction(function(transaction) {
+        //     return transaction.get(geocollection.doc(devid)).then(function(existingDoc) {
+        //         if (!existingDoc.exists) {
+        //             throw "Document does not exist!";
+        //         }
+        //         let eData = existingDoc.data().d;
+        //
+        //
+        //         if (bDoTheUpdate) {
+        //             transaction.update(collection.doc(rKey), {d: eData});
+        //             if (bDibs === true)
+        //                 return "Success. This space is currently reserved for you";
+        //             else
+        //                 return "Space released for others";
+        //         }
+        //     });
+        // }).then(function(dMessage) {
+        //     console.log("Successful dMessage:", dMessage);
+        //     if (dMessage !== null)
+        //         Alert.alert(dMessage);
+        // }).catch(function(dMessage) {
+        //     console.log("Error dMessage:", dMessage);
+        // });
     };
-
-    // let sfDocRef = db.collection("cities").doc("SF");
-    // db.runTransaction(function(transaction) {
-    //     return transaction.get(sfDocRef).then(function(sfDoc) {
-    //         if (!sfDoc.exists) {
-    //             throw "Document does not exist!";
-    //         }
-    //         var newPopulation = sfDoc.data().population + 1;
-    //         if (newPopulation <= 1000000) {
-    //             transaction.update(sfDocRef, { population: newPopulation });
-    //             return newPopulation;
-    //         } else {
-    //             return Promise.reject("Sorry! Population is too big.");
-    //         }
-    //     });
-    // }).then(function(newPopulation) {
-    //     console.log("Population increased to ", newPopulation);
-    // }).catch(function(err) {
-    //     console.error(err);
-    // });
-
-
-
 
     updateFirestoreReservedRcd = async (space, bDibs) => {
         try {
@@ -426,7 +425,7 @@ class myFuncs  {
         try {
             // this.myBreadCrumbs('isLocationValid', 'MyFuncs');
 
-            if (locObj === null || locObj === undefined ||
+            if (locObj === 0 || locObj === null || locObj === undefined ||
                 (typeof locObj.coords === "undefined" && typeof locObj.latitude === "undefined") )
                 return false;
             else

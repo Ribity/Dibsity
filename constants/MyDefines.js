@@ -6,7 +6,7 @@ export default {
     clearAllStorage: false,
     log_details: false,
     fakeLocation: false,    // Fakes location changes.
-    fakeParkedLocation: false,
+    fakeParkedLocation: true,
     oneMinuteIntervals: false,
 
     fakeSeconds: 3,

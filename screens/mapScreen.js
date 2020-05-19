@@ -34,6 +34,7 @@ import * as Constants from "expo-constants";
 
 let willUnmount = false;
 let myfirestore = null;
+let mapScreenSpaces = [];
 
 const {height, width} = Dimensions.get('window');
 const initialState = {
@@ -41,7 +42,7 @@ const initialState = {
     showInitMessage: true,
     readyToGo: false,
     isAuthenticated: false,
-    userSavedParkingLocation: false,
+    bUserSavedParkingLocation: false,
 };
 
 class MapScreen extends React.Component {
@@ -99,7 +100,7 @@ class MapScreen extends React.Component {
 
             if (myfuncs.isLocationValid(retObj.parkedLocation)) {
                 this.props.updateParkedLocation(retObj.parkedLocation);
-                this.setState({userSavedParkingLocation: true});
+                this.setState({bUserSavedParkingLocation: true});
             }
 
             await this.props.updateSettings(retObj.settings);
@@ -236,17 +237,14 @@ class MapScreen extends React.Component {
     saveParkedLocation = (newLocation) => {
         try {
             myfuncs.myBreadCrumbs('saveParkedLocation', this.props.navigation.state.routeName);
-
-
             if (newLocation === 0) {
-                console.log("Clearing park location");
-
+                console.log("Clearing parked location");
 
                 // mk1 need to write code to clear parking spot from storage, and read it upon init
 
-                this.props.updateParkedLocation(0);
-                myfuncs.writeUserDataToLocalStorage("parkedLocation", 0);
-                this.setState({userSavedParkingLocation: false});
+                this.props.updateParkedLocation({});
+                myfuncs.writeUserDataToLocalStorage("parkedLocation", {});
+                this.setState({bUserSavedParkingLocation: false});
                 this.refs.toast.show("Parking Location Cleared", 3000);
                 this.refs.toastCenter.show("Parking Location Cleared", 3000);
             } else {
@@ -265,7 +263,7 @@ class MapScreen extends React.Component {
                     this.props.updateParkedLocation(newLocation);
                     myfuncs.writeUserDataToLocalStorage("parkedLocation", newLocation);
                 }
-                this.setState({userSavedParkingLocation: true});
+                this.setState({bUserSavedParkingLocation: true});
                 this.refs.toast.show("Parking Location Saved", 3000);
                 this.refs.toastCenter.show("Parking Location Saved", 3000);
             }
@@ -273,6 +271,10 @@ class MapScreen extends React.Component {
         } catch (error) {
             myfuncs.myRepo(error);
         }
+    };
+    mySpaces = (newSpaces)  => {
+        mapScreenSpaces = myfuncs.clone(newSpaces);
+        // console.log("mapScreenSpaces:", mapScreenSpaces);
     };
 
     render() {
@@ -288,8 +290,9 @@ class MapScreen extends React.Component {
                        }
                         {(this.state.readyToGo === true && MyDefines.default_tasks.refresh_map === false) &&
                         <MapComponent navigation={this.props.navigation}
-                                      onDepartingShortlyPress={this.onDepartingShortlyPress}
                                       onSaveParkedLocation={this.saveParkedLocation}
+                                      onDepartingShortly={this.onDepartingShortlyPress}
+                                      parentSpaces={this.mySpaces}
                         />
                         }
                         {(this.state.readyToGo === true && MyDefines.default_tasks.refresh_map === false) &&
@@ -297,7 +300,7 @@ class MapScreen extends React.Component {
                         }
                         {(this.state.readyToGo === true &&
                             MyDefines.default_tasks.refresh_map === false &&
-                            this.state.userSavedParkingLocation) &&
+                            this.state.bUserSavedParkingLocation) &&
                         <DepartParkedIcon onPress={this.onDepartingShortlyPress} />
                         }
 
@@ -377,11 +380,11 @@ class MapScreen extends React.Component {
         try {
             myfuncs.myBreadCrumbs('DepartingMinutesPressed', this.props.navigation.state.routeName);
             let bUpdate = false;
-            let previousTen = null;
+            let bPreviousTen = false;
 
             this.setState({isDepartingShortlyModalVisible: false});
 
-            myfuncs.addFirestoreDepartingRcd(this.props.parkedLocation, minutes, bUpdate, previousTen);  // mk1 need to get bUpdate value correct.
+            myfuncs.addFirestoreDepartingRcd(this.props.parkedLocation, minutes, bUpdate, bPreviousTen);  // mk1 need to get bUpdate value correct.
         } catch (error) {
             myfuncs.myRepo(error);
         }

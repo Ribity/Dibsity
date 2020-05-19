@@ -60,7 +60,7 @@ class MapComponent extends React.Component {
                 spaces: [],
                 parkedLocation: null,
                 iconOpacity: 1.0,
-                displayParkedIcon: true,
+                bDisplayParkedIcon: false,
 
                 bearing: 0,
                 initRegion: null,
@@ -110,6 +110,10 @@ class MapComponent extends React.Component {
             };
             this.fakeCount = 0;
             this.setState({parkedLocation: this.props.parkedLocation});
+            if (myfuncs.isLocationValid(this.props.parkedLocation) === true)
+                this.setState({bDisplayParkedIcon: true});
+            else
+                this.setState({bDisplayParkedIcon: false});
 
         } catch (error) {
             myfuncs.myRepo(error);
@@ -365,42 +369,52 @@ class MapComponent extends React.Component {
         let tSpaces = [...this.state.spaces];
         let minsRemaining;
         let bMakeIconOpaque = false;
-        let bDisplayParkedIcon = true;
+        let bDisplayParkedIcon;
+        if (myfuncs.isLocationValid(this.props.parkedLocation) === true)
+            bDisplayParkedIcon = true;
+        else
+            bDisplayParkedIcon = false;
+
         for (let i=tSpaces.length-1; i>=0; i--) {
             minsRemaining = this.calcRemainingMinutes(tSpaces[i].secsDeparting, 9999);
             if (minsRemaining >= 0) {
-                tSpaces[i].minsRemaining = minsRemaining;
-                this.setMinutesRemainingIcon(tSpaces[i]);
+                if (minsRemaining !== tSpaces[i].minsRemaining) {
+                    tSpaces[i].minsRemaining = minsRemaining;
+                    this.setMinutesRemainingIcon(tSpaces[i]);
+                    bModified = true;
+                }
                 let distance = myfuncs.calcDistance(
                     {"latitude": tSpaces[i].latitude, "longitude": tSpaces[i].longitude},
                     this.props.location.coords);
                 if (distance < 300) {
                     bMakeIconOpaque = true;
                 }
-                distance = myfuncs.calcDistance(
-                    {"latitude": tSpaces[i].latitude, "longitude": tSpaces[i].longitude},
-                    this.props.parkedLocation);
-                if (distance < 3) { // If one of the spaces is MY parked space, don't show parked Icon
-                    bDisplayParkedIcon = false;
+                if (bDisplayParkedIcon === true) {
+                    distance = myfuncs.calcDistance(
+                        {"latitude": tSpaces[i].latitude, "longitude": tSpaces[i].longitude},
+                        this.props.parkedLocation);
+                    if (distance < 3) { // If one of the spaces is MY parked space, don't show parked Icon
+                        bDisplayParkedIcon = false;
+                    }
                 }
             } else {
                 console.log("splice out space");
                 tSpaces.splice(i, 1);
+                bModified = true;
             }
-            bModified = true;
+            // bModified = true;
         }
-
-        if (bModified)
+        if (bModified) {
+            console.log("bModified");
             await this.setState({spaces: tSpaces});
-
+            this.props.parentSpaces(tSpaces);
+        }
         if (bMakeIconOpaque)
             this.setState({iconOpacity: 0.4});
         else
             this.setState({iconOpacity: 1.0});
-
-        if (bDisplayParkedIcon !== this.state.displayParkedIcon)
-            this.setState({displayParkedIcon: bDisplayParkedIcon});
-
+        if (bDisplayParkedIcon !== this.state.bDisplayParkedIcon)
+            this.setState({bDisplayParkedIcon: bDisplayParkedIcon});
     };
     setMinutesRemainingIcon = (spaceRcd) => {
 
@@ -421,7 +435,7 @@ class MapComponent extends React.Component {
         } else {
             spaceRcd.fColor = "orange";
             if (mins > 5)
-                spaceRcd.bgColor = "lightgreen";
+                spaceRcd.bgColor = "green";
             else
                 spaceRcd.bgColor = "green";
         }
@@ -493,8 +507,10 @@ class MapComponent extends React.Component {
 
                 joined = joined.concat(newSpace);
             }
-            if (bModified)
+            if (bModified) {
                 this.setState({spaces: joined});
+                this.props.parentSpaces(joined);
+            }
 
             console.log("Spaces:", joined);
         } catch (error) {
@@ -512,14 +528,17 @@ class MapComponent extends React.Component {
             nextSpaces.splice(index,1);
 
             this.setState({spaces: nextSpaces})
+            this.props.parentSpaces(nextSpaces);
         } catch (error) {
             myfuncs.myRepo(error);
         }
     };
     clearSpaces = async (idx) => {
-        if (idx === -1)
+        if (idx === -1) {
             this.setState({spaces: []});
-        else {
+            this.props.parentSpaces([]);
+
+        } else {
             let tMins = this.listenerTenMinutes[idx];
             let tSpaces = [...this.state.spaces];
             for (let i=tSpaces.length-1; i>=0; i--) {
@@ -529,6 +548,7 @@ class MapComponent extends React.Component {
             }
             if (tSpaces.length !== this.state.spaces.length) {
                 await this.setState({spaces: tSpaces});
+                this.props.parentSpaces(tSpaces);
             }
         }
     };
@@ -684,12 +704,24 @@ class MapComponent extends React.Component {
             let distance = myfuncs.calcDistance({"latitude": space.latitude, "longitude": space.longitude},
                 this.props.location.coords);
             // console.log("Distance from space: ", distance);
+            if (space.key === Constants.deviceId) {
+                Alert.alert(space.name, "This is your parking space",
+                    [
+                        {text: 'Ok'},
+                        {
+                            text: 'Modify departure time?', onPress: () => {
+                                this.props.onDepartingShortly()
+                            }
+                        },
+                    ]);
+                return;
+            }
+
             if (space.dibs === true) {
                 if (space.dibsDevId === Constants.deviceId) {
                     Alert.alert(space.name, null,
                         [
                             {text: 'Cancel'},
-
                             {
                                 text: 'UN - Reserve This Spot?', onPress: () => {
                                     this.reserveThisSpot(space, false)
@@ -697,10 +729,7 @@ class MapComponent extends React.Component {
                             },
                         ]);
                 } else {
-                    Alert.alert(space.name, "Someone already reserved this spot",
-                        [
-                            {text: 'Ok'},
-                        ]);
+                    Alert.alert(space.name, "Someone already reserved this spot");
                 }
             } else if (distance < 25) {
                 Alert.alert(space.name, null,
@@ -713,10 +742,7 @@ class MapComponent extends React.Component {
                         },
                     ]);
             } else {
-                Alert.alert(space.name, 'You must be within 25 meters to reserve this spot',
-                    [
-                        {text: 'Ok'},
-                    ]);
+                Alert.alert(space.name, 'You must be within 25 meters to reserve this spot');
             }
         } catch (error) {
             myfuncs.myRepo(error);
@@ -745,7 +771,7 @@ class MapComponent extends React.Component {
         // console.log("New:", newCoord);
         // console.log("Old:", this.props.parkedLocation);
 
-        let distance = myfuncs.calcDistance(newCoord, this.props.parkedLocation);
+        let distance = myfuncs.calcDistance(newCoord, this.props.parkedLocation.coords);
         console.log("Moved it ", distance, " meters");
         if (distance > 3) {
             Alert.alert("Save your new parked location?",null,
@@ -793,7 +819,10 @@ class MapComponent extends React.Component {
             rWidth  *= MyDefines.default_user.profile.map_user_size;
             rHeight *= MyDefines.default_user.profile.map_user_size;
 
+            // console.log("state.parkedLocation:", this.state.parkedLocation);
+
                 return (
+
                 this.state.locationResult === null ?
                     <View>
                         <View style={{paddingTop: 180}}/>
@@ -869,14 +898,13 @@ class MapComponent extends React.Component {
                                     </View>
                                 </MapView.Marker>
                             ))}
-
-                            {this.state.displayParkedIcon && myfuncs.isLocationValid(this.state.parkedLocation) &&
+                            {this.state.bDisplayParkedIcon && myfuncs.isLocationValid(this.state.parkedLocation) &&
                                 <MapView.Marker
                                     draggable
                                     onDragEnd={this.onUserParkingDragged}
                                     coordinate={{
-                                        longitude: this.state.parkedLocation.longitude,
-                                        latitude: this.state.parkedLocation.latitude
+                                        longitude: this.state.parkedLocation.coords.longitude,
+                                        latitude: this.state.parkedLocation.coords.latitude
                                     }}
                                     title={"Current parked location"}
                                     description={"You may drag the Parked icon to a new location"}
@@ -890,10 +918,8 @@ class MapComponent extends React.Component {
                                                resizeMode: 'contain',
                                            }}
                                     />
-
                                 </MapView.Marker>
                             }
-
                         </MapView>
 
                 );

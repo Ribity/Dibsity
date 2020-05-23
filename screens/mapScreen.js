@@ -228,7 +228,7 @@ class MapScreen extends React.Component {
                 "If not, please remember to save your location the next time you park.",
                 [
                     {text: 'No'},
-                    {text: 'Yes', onPress: () => {this.saveParkedLocation(this.props.location.coords)}},
+                    {text: 'Yes', onPress: () => {this.saveParkedLocation(this.props.location)}},
                 ]);
         } catch (error) {
             myfuncs.myRepo(error);
@@ -380,11 +380,37 @@ class MapScreen extends React.Component {
         try {
             myfuncs.myBreadCrumbs('DepartingMinutesPressed', this.props.navigation.state.routeName);
             let bUpdate = false;
-            let bPreviousTen = false;
+            let bPreservePreviousTen = false;
+            let setOrUpdateOrPrevious = 0;
+            let thisTenMins = myfuncs.getTenMinuteInterval();
+            let prevDibs = 0;
+            let prevDibsDevId = 0;
 
             this.setState({isDepartingShortlyModalVisible: false});
 
-            myfuncs.addFirestoreDepartingRcd(this.props.parkedLocation, minutes, bUpdate, bPreviousTen);  // mk1 need to get bUpdate value correct.
+            // determine if space exists already for this devid, and is it this tenMins or last?
+            // console.log("mapScreenSpaces:", mapScreenSpaces);
+            for (let i=0; i<mapScreenSpaces.length; i++) {
+                if (mapScreenSpaces[i].key === Constants.default.deviceId) {
+                    console.log("m:", mapScreenSpaces.tenMinutes, ",t:", thisTenMins);
+                    if (mapScreenSpaces[i].tenMinutes === thisTenMins) {
+                        bUpdate = true;
+                    } else {
+                        bPreservePreviousTen = true;
+                        prevDibs = mapScreenSpaces[i].dibs;
+                        prevDibsDevId = mapScreenSpaces[i].dibsDevId;
+                    }
+                }
+            }
+            if (bPreservePreviousTen)
+                setOrUpdateOrPrevious = 2;
+                    // if we have an existing record, no need to preserve previousTenMins' dibs.
+                    //  ie, prevTen dibs only needs to be preserved on a set, not an update.
+            if (bUpdate === true)
+                setOrUpdateOrPrevious = 1;
+
+            myfuncs.addFirestoreDepartingRcd(this.props.parkedLocation.coords, thisTenMins, minutes,
+                setOrUpdateOrPrevious, prevDibs, prevDibsDevId);
         } catch (error) {
             myfuncs.myRepo(error);
         }

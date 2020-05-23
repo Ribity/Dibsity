@@ -392,7 +392,7 @@ class MapComponent extends React.Component {
                 if (bDisplayParkedIcon === true) {
                     distance = myfuncs.calcDistance(
                         {"latitude": tSpaces[i].latitude, "longitude": tSpaces[i].longitude},
-                        this.props.parkedLocation);
+                        this.props.parkedLocation.coords);
                     if (distance < 3) { // If one of the spaces is MY parked space, don't show parked Icon
                         bDisplayParkedIcon = false;
                     }
@@ -426,7 +426,10 @@ class MapComponent extends React.Component {
             addition = 9;
 
         if (spaceRcd.dibs) {    // If someone has it reserved, show as yellow
-            spaceRcd.fColor = "tan";
+            if (spaceRcd.dibsDevId === Constants.deviceId)
+                spaceRcd.fColor = "red";
+            else
+                spaceRcd.fColor = "tan";
             // spaceRcd.bgColor = "khaki";
             // spaceRcd.fColor = "grey";
             // spaceRcd.fColor = "silver";
@@ -767,7 +770,8 @@ class MapComponent extends React.Component {
         }
     };
     onUserParkingDragged = (e) => {
-        let newCoord = e.nativeEvent.coordinate;
+        let newCoord = {};
+        newCoord.coords = e.nativeEvent.coordinate;
         // console.log("New:", newCoord);
         // console.log("Old:", this.props.parkedLocation);
 
@@ -784,15 +788,10 @@ class MapComponent extends React.Component {
         }
     };
     refreshParkedIcon = () => {
-        let tCoord = {...this.props.parkedLocation};
-        // console.log("tCoord:", tCoord);
-        tCoord.latitude += 0.00000000001;
-        // console.log("tCoord:", tCoord);
-
-        this.props.updateParkedLocation(tCoord);
-
+        let tLocation = {...this.props.parkedLocation};
+        tLocation.coords.latitude += 0.00000000001;
+        this.props.updateParkedLocation(tLocation);
         this.setState({parkedLocation: this.props.parkedLocation});
-
     };
     render() {
         try {
@@ -820,6 +819,9 @@ class MapComponent extends React.Component {
             rHeight *= MyDefines.default_user.profile.map_user_size;
 
             // console.log("state.parkedLocation:", this.state.parkedLocation);
+            // console.log("bDPicon:", this.state.bDisplayParkedIcon);
+            // console.log("parkedLocation:", this.state.parkedLocation);
+
 
                 return (
 

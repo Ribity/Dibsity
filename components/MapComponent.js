@@ -20,6 +20,7 @@ import _ from 'lodash'
 import myStyles from "../myStyles";
 import ApiKeys from "../constants/ApiKeys";
 import {updateParkedLocation} from "../actions/ParkedLocationActions";
+import {setPannedMap} from "../actions/TasksActions";
 
 const GEOLOCATION_OPTIONS = { accuracy: Location.Accuracy.Highest, interval: 1000, enableHighAccuracy: true};
 
@@ -46,6 +47,7 @@ class MapComponent extends React.Component {
 
             this.geoSubscription = [false, false];
             this.watchId = null;
+            this.timeoutId_pan = -1;
             this.intervalId_animate = -1;
             this.recalc = -1;
             this.fire_interval = -1;
@@ -79,7 +81,6 @@ class MapComponent extends React.Component {
             myfuncs.myRepo(error);
         }
     };
-
     componentDidMount() {
         try {
             myfuncs.myBreadCrumbs('Did mount', this.props.navigation.state.routeName);
@@ -125,7 +126,7 @@ class MapComponent extends React.Component {
 
             for (let idx=0; idx<2; idx++) {
                 if (this.geoSubscription[idx]) {
-                    console.log("Cancelling old Listener", idx, ":", this.listenerTenMinutes[idx], " (unMount)");
+                    // console.log("Cancelling old Listener", idx, ":", this.listenerTenMinutes[idx], " (unMount)");
                     this.geoSubscription[idx]();
                     this.geoSubscription[idx] = false;
                 }
@@ -142,6 +143,8 @@ class MapComponent extends React.Component {
                 clearInterval(this.recalc);
             if (this.fire_interval !== -1)
                 clearInterval(this.fire_interval);
+            if (this.timeoutId_pan !== -1)
+                clearTimeout(this.timeoutId_pan);
         } catch (error) {
             myfuncs.myRepo(error);
         }
@@ -155,12 +158,13 @@ class MapComponent extends React.Component {
                         initRegion: {
                             latitude: this.props.location.coords.latitude,
                             longitude: this.props.location.coords.longitude,
-                            latitudeDelta: .0005 * Math.pow(MyDefines.default_user.profile.zoom_multiplier, 2),
-                            longitudeDelta: .0005 * Math.pow(MyDefines.default_user.profile.zoom_multiplier, 2),
+                            latitudeDelta: .0005 * Math.pow(this.props.settings.zoom_multiplier, 2),
+                            longitudeDelta: .0005 * Math.pow(this.props.settings.zoom_multiplier, 2),
                     }
                 });
             }
             this.userHasControl = false;
+            this.props.setPannedMap(false);
 
         } catch (error) {
             myfuncs.myRepo(error);
@@ -178,16 +182,20 @@ class MapComponent extends React.Component {
                 };
                 let region = {
                     ...spaceCoord,
-                    latitudeDelta: .0005 * Math.pow(MyDefines.default_user.profile.zoom_multiplier, 2),
-                    longitudeDelta: .0005 * Math.pow(MyDefines.default_user.profile.zoom_multiplier, 2),
+                    latitudeDelta: .0005 * Math.pow(this.props.settings.zoom_multiplier, 2),
+                    longitudeDelta: .0005 * Math.pow(this.props.settings.zoom_multiplier, 2),
                 };
 
                 // this.map.animateToRegion(region, 1000 * 2);
 
                 let heading = 0;
-                if (MyDefines.default_user.profile.map_orients_to_users_bearing === 2) // If orients to users bearing
+                if (this.props.settings.map_orients_to_users_bearing === 2 ||
+                    this.props.settings.map_orients_to_users_bearing === '2') {
                     heading = this.props.location.coords.heading;
+                    // console.log("heading1:", heading);
+                }
 
+                // console.log("props.settings:",this.props.settings );
                 if ( this.map !=null ) {    // Added the IF because I had one exception in myRepo:  undefined is not an object (evaluating 'u.map.animateCamera'). I think this got called before it rendered the map
                     this.map.animateCamera(
                         {
@@ -197,16 +205,13 @@ class MapComponent extends React.Component {
                         }, 1000);
                 }
                 this.state.coordinate.timing(spaceCoord, 1000).start();
-                if (MyDefines.default_user.profile.map_orients_to_users_bearing !== 2) // If map is always North
+                if (this.props.settings.map_orients_to_users_bearing !== 2 &&
+                    this.props.settings.map_orients_to_users_bearing !== '2')
                     this.setState({bearing: this.props.location.coords.heading});
                 else {
                     if (this.state.bearing !== 0)
                         this.setState({bearing: 0})
                 }
-
-                // console.log(this.props.location);        // mk1
-                // this.setState({bearing: 0})              // mk1
-
             }
         } catch (error) {
             myfuncs.myRepo(error);
@@ -229,7 +234,7 @@ class MapComponent extends React.Component {
                     this.fakeLocation.coords.heading -= 345;
             }
             this.fakeCount++;
-            console.log("FakeCount:", this.fakeCount);
+            // console.log("FakeCount:", this.fakeCount);
 
         // console.log(this.fakeLocation.coords);
         if (myfuncs.isLocationValid(this.fakeLocation)) {
@@ -248,8 +253,8 @@ class MapComponent extends React.Component {
                 // console.log("MapComponenet GetDerivedStateFromProps new parkedLocationa: ", nextProps.parkedLocation);
                 update.parkedLocation = nextProps.parkedLocation;
             }
-            // if (prevState.profiles !== nextProps.profiles) {
-            //     update.profiles = nextProps.profiles;
+            // if (prevState.settings !== nextProps.settings) {
+            //     update.settings = nextProps.settings;
             // }
             return Object.keys(update).length ? update: null;
         } catch (error) {
@@ -284,7 +289,7 @@ class MapComponent extends React.Component {
                 } else {
                     // If ten minutes has changed, refresh one listener
                     if (this.tenMins - this.listenerTenMinutes[idx] > 1) {
-                        console.log("Mins changed by two:", this.tenMins, ":", this.listenerTenMinutes[idx]);
+                        // console.log("Mins changed by ten:", this.tenMins, ":", this.listenerTenMinutes[idx]);
                         await this.clearSpaces(idx);
                         this.addGeoFirestoreListener(idx);
                     }
@@ -319,7 +324,7 @@ class MapComponent extends React.Component {
                 doc(myCollection).collection(myTen.toString());
 
             if (this.geoSubscription[idx]) {
-                console.log("Cancelling old Listener", idx, ":", this.listenerTenMinutes[idx]);
+                // console.log("Cancelling old Listener", idx, ":", this.listenerTenMinutes[idx]);
                 this.geoSubscription[idx]();
                 this.geoSubscription[idx] = false;
             }
@@ -357,7 +362,7 @@ class MapComponent extends React.Component {
                     }
                 });
             });
-            console.log("Firestore Listener", idx, ":", myTen);
+            // console.log("Firestore Listener", idx, ":", myTen);
 
         } catch (error) {
             console.log("catch geoFirestoreListener", idx, ": " + error);
@@ -398,14 +403,16 @@ class MapComponent extends React.Component {
                     }
                 }
             } else {
-                console.log("splice out space");
+                if (MyDefines.log_details)
+                    console.log("splice out space");
                 tSpaces.splice(i, 1);
                 bModified = true;
             }
             // bModified = true;
         }
         if (bModified) {
-            console.log("bModified");
+            if (MyDefines.log_details)
+                console.log("bModified");
             await this.setState({spaces: tSpaces});
             this.props.parentSpaces(tSpaces);
         }
@@ -426,15 +433,15 @@ class MapComponent extends React.Component {
             addition = 9;
 
         if (spaceRcd.dibs) {    // If someone has it reserved, show as yellow
-            if (spaceRcd.dibsDevId === Constants.deviceId)
-                spaceRcd.fColor = "red";
-            else
+            if (spaceRcd.dibsDevId === Constants.deviceId) {
+                addition = 27;
+                spaceRcd.fColor = "green";
+                spaceRcd.bgColor = "silver";
+            } else {
                 spaceRcd.fColor = "tan";
-            // spaceRcd.bgColor = "khaki";
-            // spaceRcd.fColor = "grey";
-            // spaceRcd.fColor = "silver";
-            spaceRcd.bgColor = "gold";
-            addition = 15;
+                spaceRcd.bgColor = "gold";
+                // addition = 15;
+            }
         } else {
             spaceRcd.fColor = "orange";
             if (mins > 5)
@@ -443,6 +450,9 @@ class MapComponent extends React.Component {
                 spaceRcd.bgColor = "green";
         }
 
+        if (this.props.settings.dynamic_icons === false) {
+            addition = 9;
+        }
         spaceRcd.fSize = base+addition;
         spaceRcd.width = base+addition;
         spaceRcd.height = base+addition;
@@ -469,9 +479,9 @@ class MapComponent extends React.Component {
             let secsDeparting = rcd.dateTime.seconds + rcd.departingMinutes*60;
             let minsRemaining = this.calcRemainingMinutes(secsDeparting, rcd.departingMinutes);
             // console.log("minsRemaining:", minsRemaining);
-            console.log("addSpace Listener", idx, ":RCD:", rcd);
+            // console.log("addSpace Listener", idx, ":RCD:", rcd);
             // console.log("addSpace Listener", idx, ":ID:", devId);
-            console.log("addSpace Listener", idx, ":TEN", this.listenerTenMinutes[idx]);
+            // console.log("addSpace Listener", idx, ":TEN", this.listenerTenMinutes[idx]);
 
             // if (!myfuncs.isEmpty(rcd.timestamp)) {
             //     console.log("addSpace timeStamp true");
@@ -486,7 +496,7 @@ class MapComponent extends React.Component {
                     bAddIt = true;
                     bModified = true;
                 } else {
-                    console.log("keep previous devId space:");
+                    // console.log("keep previous devId space:");
                     bAddIt = false;
                 }
             } else {
@@ -501,7 +511,7 @@ class MapComponent extends React.Component {
                 // newSpace.id = rcd.id;
                 newSpace.latitude = rcd.coordinates.latitude;
                 newSpace.longitude = rcd.coordinates.longitude;
-                newSpace.name = rcd.name;
+                newSpace.vehicle = rcd.vehicle;
                 newSpace.minsRemaining = minsRemaining;
                 newSpace.secsDeparting = secsDeparting;
                 newSpace.dibs = rcd.dibs;
@@ -515,7 +525,8 @@ class MapComponent extends React.Component {
                 this.props.parentSpaces(joined);
             }
 
-            console.log("Spaces:", joined);
+            if (MyDefines.log_details)
+                console.log("Spaces:", joined);
         } catch (error) {
             console.log(error);
             myfuncs.myRepo(error);
@@ -524,7 +535,7 @@ class MapComponent extends React.Component {
     removeSpace = (devId, idx) => {
         try {
             myfuncs.myBreadCrumbs('removeSpace', this.props.navigation.state.routeName);
-            console.log("removeSpace Listener", idx, ":", this.listenerTenMinutes[idx]);
+            // console.log("removeSpace Listener", idx, ":", this.listenerTenMinutes[idx]);
 
             let index = this.state.spaces.findIndex(space => space.key === devId);
             let nextSpaces = this.state.spaces;
@@ -569,8 +580,8 @@ class MapComponent extends React.Component {
                         initRegion: {
                             latitude: 35.910,
                             longitude: -78.692,
-                            latitudeDelta: .0005 * Math.pow(MyDefines.default_user.profile.zoom_multiplier, 2),
-                            longitudeDelta: .0005 * Math.pow(MyDefines.default_user.profile.zoom_multiplier, 2),
+                            latitudeDelta: .0005 * Math.pow(this.props.settings.zoom_multiplier, 2),
+                            longitudeDelta: .0005 * Math.pow(this.props.settings.zoom_multiplier, 2),
                         }
                     });
                 }
@@ -612,8 +623,8 @@ class MapComponent extends React.Component {
                         initRegion: {
                             latitude: location.coords.latitude,
                             longitude: location.coords.longitude,
-                            latitudeDelta: .0005 * Math.pow(MyDefines.default_user.profile.zoom_multiplier, 2),
-                            longitudeDelta: .0005 * Math.pow(MyDefines.default_user.profile.zoom_multiplier, 2),
+                            latitudeDelta: .0005 * Math.pow(this.props.settings.zoom_multiplier, 2),
+                            longitudeDelta: .0005 * Math.pow(this.props.settings.zoom_multiplier, 2),
                         }
                     });
             }
@@ -627,7 +638,7 @@ class MapComponent extends React.Component {
             let status = Location.getProviderStatusAsync();
             console.log("enableLoc:" + error);
             if (!status.locationServicesEnabled)
-                alert("Enable Location Services");
+                Alert.alert("Enable Location Services", null);
             else {
                 console.log("getProviderStatusAsync", status);
                 myfuncs.myRepo(error);
@@ -650,8 +661,8 @@ class MapComponent extends React.Component {
                         initRegion: {
                             latitude: 35.910,
                             longitude: -78.692,
-                            latitudeDelta: .0005 * Math.pow(MyDefines.default_user.profile.zoom_multiplier, 2),
-                            longitudeDelta: .0005 * Math.pow(MyDefines.default_user.profile.zoom_multiplier, 2),
+                            latitudeDelta: .0005 * Math.pow(this.props.settings.zoom_multiplier, 2),
+                            longitudeDelta: .0005 * Math.pow(this.props.settings.zoom_multiplier, 2),
                         }
                     });
             } else {
@@ -685,8 +696,8 @@ class MapComponent extends React.Component {
                         initRegion: {
                             latitude: location.coords.latitude,
                             longitude: location.coords.longitude,
-                            latitudeDelta: .0005 * Math.pow(MyDefines.default_user.profile.zoom_multiplier, 2),
-                            longitudeDelta: .0005 * Math.pow(MyDefines.default_user.profile.zoom_multiplier, 2),
+                            latitudeDelta: .0005 * Math.pow(this.props.settings.zoom_multiplier, 2),
+                            longitudeDelta: .0005 * Math.pow(this.props.settings.zoom_multiplier, 2),
                         }
                     });
             } catch(error) {
@@ -703,12 +714,12 @@ class MapComponent extends React.Component {
     onPressSpace = (space) => {
         try {
             myfuncs.myBreadCrumbs('onPressMarker', this.props.navigation.state.routeName);
-            console.log("Space pressed");
+            // console.log("Space pressed");
             let distance = myfuncs.calcDistance({"latitude": space.latitude, "longitude": space.longitude},
                 this.props.location.coords);
             // console.log("Distance from space: ", distance);
             if (space.key === Constants.deviceId) {
-                Alert.alert(space.name, "This is your parking space",
+                Alert.alert(space.vehicle, "This is your parking space",
                     [
                         {text: 'Ok'},
                         {
@@ -722,20 +733,20 @@ class MapComponent extends React.Component {
 
             if (space.dibs === true) {
                 if (space.dibsDevId === Constants.deviceId) {
-                    Alert.alert(space.name, null,
+                    Alert.alert(space.vehicle, "You currently have this space reserved",
                         [
-                            {text: 'Cancel'},
+                            {text: 'OK, My turn signal is on'},
                             {
-                                text: 'UN - Reserve This Spot?', onPress: () => {
+                                text: 'Release this Spot?', onPress: () => {
                                     this.reserveThisSpot(space, false)
                                 }
                             },
                         ]);
                 } else {
-                    Alert.alert(space.name, "Someone already reserved this spot");
+                    Alert.alert(space.vehicle, "Someone already reserved this spot");
                 }
             } else if (distance < 25) {
-                Alert.alert(space.name, null,
+                Alert.alert(space.vehicle, "Activate your vehicle's turn signal, and reserve it ...",
                     [
                         {text: 'Cancel'},
                         {
@@ -745,15 +756,15 @@ class MapComponent extends React.Component {
                         },
                     ]);
             } else {
-                Alert.alert(space.name, 'You must be within 25 meters to reserve this spot');
+                Alert.alert(space.vehicle, 'You must be within 25 meters to reserve this spot');
             }
         } catch (error) {
             myfuncs.myRepo(error);
         }
     };
     reserveThisSpot = (space, bDibs) => {
-        console.log("Reserve this spot:", space.tenMinutes);
-        myfuncs.updateFirestoreReservedRcd(space, bDibs);
+        // console.log("Reserve this spot:", space.tenMinutes);
+        myfuncs.updateFirestoreReservedRcd(space, bDibs, this.props.settings);
     };
     onPressMyParkingSpot = () => {
         try {
@@ -775,7 +786,7 @@ class MapComponent extends React.Component {
         // console.log("New:", newCoord);
         // console.log("Old:", this.props.parkedLocation);
 
-        let distance = myfuncs.calcDistance(newCoord, this.props.parkedLocation.coords);
+        let distance = myfuncs.calcDistance(newCoord.coords, this.props.parkedLocation.coords);
         console.log("Moved it ", distance, " meters");
         if (distance > 3) {
             Alert.alert("Save your new parked location?",null,
@@ -793,12 +804,47 @@ class MapComponent extends React.Component {
         this.props.updateParkedLocation(tLocation);
         this.setState({parkedLocation: this.props.parkedLocation});
     };
+    userPannedMap = () => {
+        try {
+            myfuncs.myBreadCrumbs('userPannedMap', this.props.navigation.state.routeName);
+            // console.log("mk1a user panned");
+
+            this.setUserPanned(true);
+        } catch (error) {
+            myfuncs.mySentry(error);
+        }
+    };
+    setUserPanned = (bSetPanned) => {
+        this.userHasControl = true;
+        if(bSetPanned)
+            this.props.setPannedMap(true);
+        if (this.timeoutId_pan !== -1) {
+            clearTimeout(this.timeoutId_pan);
+        }
+        this.timeoutId_pan = setTimeout(this.giveControlBackToMap,
+            this.props.settings.refocus_seconds * 1000);
+    };
+    userPannedNewRegion = (e) => {
+        try {
+            myfuncs.myBreadCrumbs('userPannedNewRegion', this.props.navigation.state.routeName);
+
+            // if (this.userHasControl) {  mk1
+            //     this.props.setPannedCoords(e);
+            // }
+        } catch (error) {
+            myfuncs.mySentry(error);
+        }
+    };
+    giveControlBackToMap = () => {
+        this.userHasControl = false;
+        this.props.setPannedMap(false);
+    };
     render() {
         try {
             myfuncs.myBreadCrumbs('render', "MapComponent");
             let userIcon;
             userIcon = userIcon1;
-            if (MyDefines.default_user.profile.map_user_icon === 2) {
+            if (this.props.settings.map_user_icon === 2) {
                 if (this.state.bearing < 180)
                     userIcon = userIcon2e;
                 else
@@ -815,8 +861,8 @@ class MapComponent extends React.Component {
             //     rHeight = 15;
             // }
 
-            rWidth  *= MyDefines.default_user.profile.map_user_size;
-            rHeight *= MyDefines.default_user.profile.map_user_size;
+            rWidth  *= this.props.settings.map_user_size;
+            rHeight *= this.props.settings.map_user_size;
 
             // console.log("state.parkedLocation:", this.state.parkedLocation);
             // console.log("bDPicon:", this.state.bDisplayParkedIcon);
@@ -858,6 +904,9 @@ class MapComponent extends React.Component {
                             style={styles.bigMap}
                             ref={map => this.map = map}
                             initialRegion={this.state.initRegion}
+                            onMoveShouldSetResponder={this.userPannedMap}
+                            onPanDrag={this.userPannedMap}
+                            onRegionChange={this.userPannedNewRegion}
                             showsMyLocationButton={true}
                             loadingEnabled
                             showsScale={true}
@@ -886,7 +935,7 @@ class MapComponent extends React.Component {
                                 <MapView.Marker
                                     key={index}
                                     coordinate={{longitude: space.longitude, latitude: space.latitude}}
-                                    title={space.name}
+                                    title={space.vehicle}
                                     // description={"Headed"}
                                     onPress={() => this.onPressSpace(space)}
                                     anchor={{x: 0.5, y: 0.5}}   // This puts the Android image in center.
@@ -967,12 +1016,14 @@ const mapStateToProps = (state) => {
     const { tasks } = state;
     const { fakeLocations } = state;
     const { parkedLocation } = state;
-    return { location, tasks, fakeLocations, parkedLocation}
+    const { settings } = state;
+    return { location, tasks, fakeLocations, parkedLocation, settings}
 };
 const mapDispatchToProps = dispatch => (
     bindActionCreators({
         updateLocation,
         updateParkedLocation,
+        setPannedMap,
     }, dispatch)
 );
 export default connect(mapStateToProps, mapDispatchToProps)(MapComponent);

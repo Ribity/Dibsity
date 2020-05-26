@@ -59,21 +59,21 @@ class MyVehicleScreen extends React.Component {
             myfuncs.myBreadCrumbs('onSubmitPress', this.props.navigation.state.routeName);
             let myVehicle = this.state.vehicle;
 
-            if (myVehicle.make.indexOf(' ') === 0) {
-                Alert.alert("Error with input for Make",
+            if (myVehicle.description.indexOf(' ') === 0) {
+                Alert.alert("Error with input for Description of your vehicle",
                     "First character cannot be a space");
                 return;
             }
-            if (myVehicle.model.indexOf(' ') === 0) {
-                Alert.alert("Error with input for model",
-                    "First character cannot be a space");
+            if (myVehicle.description.length < 7) {
+                Alert.alert("Error with input for Description of your vehicle",
+                    "Must be at least 7 characters");
                 return;
             }
-            if (myVehicle.year.length < 1) {
-                Alert.alert("Error with input for year",
-                    "Please ensure the year actually contains a value");
-                return;
-            }
+            // if (myVehicle.plate.indexOf(' ') === 0) {
+            //     Alert.alert("Error with input for license plate",
+            //         "First character cannot be a space");
+            //     return;
+            // }
 
             this.refs.toast.show("Saved", 1000);
             this.refs.toast_bottom.show("Saved", 1000);
@@ -101,22 +101,40 @@ class MyVehicleScreen extends React.Component {
                 >
                     <View style={myStyles.container}>
 
-                    <View style={{marginTop: 20}}/>
+                        <Text style={myStyles.infoTextTopMargin}>This info helps others identify your car when you offer your parking space</Text>
+
+                        <View style={{marginTop: 20}}/>
 
                         <MyButton buttonStyle={myStyles.selectButton}
                                   textStyle={myStyles.selectButtonText}
                                   onPress={() => this.onSubmitPress(false)}
                                   title={"Save"}/>
 
-                        <Text style={myStyles.iFieldLabel}>Make:</Text>
+
+
+                        <Text style={myStyles.iFieldLabel}>Short description of your vehicle:</Text>
                         <TextInput style={myStyles.iField}
-                                   value={this.state.vehicle.make}
-                                   onChangeText={(text) => this.updateState({make: text})}
+                                   value={this.state.vehicle.description}
+                                   onChangeText={(text) => this.updateState({description: text})}
                                    clearButtonMode='always'
-                                   placeholder={"Make"}
+                                   placeholder={"White Toyota Prius"}
                                    returnKeyType='done'
                                    placeholderTextColor={"grey"}
-                                   maxLength={100}
+                                   maxLength={50}
+                                   onFocus={this.handleInputFocus}
+                                   onBlur={this.handleInputBlur}
+                        />
+
+                        <Text style={myStyles.infoTextTopMargin}>Optional</Text>
+                        <Text style={myStyles.iFieldLabelNoTopMargin}>First few characters of your license plate:</Text>
+                        <TextInput style={myStyles.iField}
+                                   value={this.state.vehicle.plate}
+                                   onChangeText={(text) => this.updateState({plate: text})}
+                                   clearButtonMode='always'
+                                   placeholder={"AB"}
+                                   returnKeyType='done'
+                                   placeholderTextColor={"grey"}
+                                   maxLength={2}
                                    onFocus={this.handleInputFocus}
                                    onBlur={this.handleInputBlur}
                         />

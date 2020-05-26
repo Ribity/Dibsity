@@ -82,10 +82,25 @@ const myStyles = StyleSheet.create({
         alignItems: 'center',
         padding: 5,
     },
+    infoTextTopMargin: {
+        fontSize: 17,
+        color: 'green',
+        alignItems: 'center',
+        paddingTop: 20,
+        padding: 5,
+    },
     infoLargerText: {
         fontSize: 23,
         color: 'green',
         textAlign: 'center',
+    },
+    iFieldLabelNoTopMargin: {
+        fontSize: 17,
+        paddingLeft: 8,
+        textAlign: 'left',
+        alignSelf: 'stretch',
+        color: 'green',
+        fontWeight: 'bold',
     },
     iFieldLabel: {
         fontSize: 17,

@@ -74,6 +74,22 @@ class SettingsScreen extends React.Component {
                             title='Keep screen awake'
                             titleStyle={{fontSize:20}}
                         />
+                        <SettingsList.Item
+                            hasSwitch={true}
+                            switchState={this.state.settings.confirmation_popups}
+                            switchOnValueChange={(bEvent) => this.updateSettings({confirmation_popups: bEvent})}
+                            hasNavArrow={false}
+                            title='Confirmation Pop-ups'
+                            titleStyle={{fontSize:20}}
+                        />
+                        <SettingsList.Item
+                            hasSwitch={true}
+                            switchState={this.state.settings.dynamic_icons}
+                            switchOnValueChange={(bEvent) => this.updateSettings({dynamic_icons: bEvent})}
+                            hasNavArrow={false}
+                            title='Dynamic Departure Sizes'
+                            titleStyle={{fontSize:20}}
+                        />
 
                         <SettingsList.Item
                             title='Map settings'

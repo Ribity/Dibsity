@@ -7,7 +7,8 @@ export default {
     log_details: false,
     fakeLocation: false,    // Fakes location changes.
     fakeParkedLocation: false,
-    oneMinuteIntervals: true,
+    oneMinuteIntervals: false,
+    disable_newUserSentry: true,
 
     fakeSeconds: 3,
 
@@ -22,14 +23,18 @@ export default {
 
     default_settings: {
         keep_awake: true,
-        retrieved_user_data: false,
+        confirmation_popups: true,
+        refocus_seconds: 8,
+        zoom_multiplier: 3,
+        map_user_size: 2,
+        map_user_icon: 2,
+        map_orients_to_users_bearing: 1,
+        dynamic_icons: true,
     },
 
     default_vehicle: {
-        color: "White",
-        make: "Ford",
-        model: "Prius",
-        year: 2019,
+        description: "",
+        plate: "",
     },
 
     default_tasks: {
@@ -74,22 +79,21 @@ export default {
         },
         "timestamp": 0,
     },
-    default_user: {
-        profile: {
-            client_allow_confirmation_popups: true,
-            total_points: 0,
-            refocus_seconds: 8,
-            zoom_multiplier: 3,
-            map_user_size: 2,
-            map_user_icon: 2,
-            map_orients_to_users_bearing: 1,
-            keep_awake: true,
-            last_seen_dt: {},
-
-        },
-        is_superuser: false,
-        is_staff: false,
-    },
+    // default_user: {
+    //     profile: {
+            // client_allow_confirmation_popups: true,
+            // total_points: 0,
+            // refocus_seconds: 8,
+            // zoom_multiplier: 3,
+            // map_user_size: 2,
+            // map_user_icon: 2,
+            // map_orients_to_users_bearing: 1,
+            // keep_awake: true,
+            // last_seen_dt: {},
+        // },
+        // is_superuser: false,
+        // is_staff: false,
+    // },
 
 
 

@@ -24,6 +24,7 @@ let myfirestore = null;
 class myFuncs  {
     init = async () => {
         let settings = MyDefines.default_settings;
+        let vehicle = MyDefines.default_vehicle;
         let parkedLocation = null;
         let new_user = false;
         try {
@@ -43,10 +44,17 @@ class myFuncs  {
                 if (MyDefines.log_details)
                     console.log("Successfully retrieved settings from Storage:", settings)
             }
+
+            let user_vehicle = await hardStorage.getKey("user_vehicle");
+            if (user_vehicle !== null) {
+                vehicle = {...vehicle, ...user_vehicle};
+                if (MyDefines.log_details)
+                    console.log("Successfully retrieved vehicle from Storage:", vehicle)
+            }
             parkedLocation = await hardStorage.getKey("parkedLocation");
 
             // console.log("1st parkLoc from hardStorage:", parkedLocation);
-            if (parkedLocation === 0 ||
+            if (parkedLocation === null || parkedLocation === 0 ||
                 (typeof parkedLocation.coords === "undefined") )
                 parkedLocation = {};
             // console.log("2nd parkLoc from hardStorage:", parkedLocation);
@@ -56,7 +64,7 @@ class myFuncs  {
         } catch (error) {
             this.myRepo(error);
         }
-        return {settings: settings, new_user: new_user, parkedLocation: parkedLocation};
+        return {settings: settings, vehicle: vehicle, new_user: new_user, parkedLocation: parkedLocation};
     };
     check_new_user = async () => {
         let new_user = false;
@@ -67,7 +75,10 @@ class myFuncs  {
                 new_user = true;
                 hardStorage.setKey("dibsity_user", true);
                 // console.log("new user");
-                Sentry.captureMessage("New Dibsity user", 'info');
+                if (MyDefines.disable_newUserSentry === true)
+                    console.log("New user not sent to Sentry");
+                else
+                    Sentry.captureMessage("New Dibsity user", 'info');
             }
         } catch (error) {
             this.myRepo(error);
@@ -188,7 +199,7 @@ class myFuncs  {
 
             fbConfig = ApiKeys.FirebaseConfig;
             if (!firebase.apps.length) {
-                console.log("initializing firebase");
+                // console.log("initializing firebase");
                 let app = await firebase.initializeApp(fbConfig);
             }
             myfirestore = firebase.firestore();
@@ -210,15 +221,15 @@ class myFuncs  {
     // and then the db.transaction knows to read the previous tenMinutes.
     // Or have a small exposure and just preserve the dibs and devId from the state.spaces
     // which has the exposure of ships passing in the night.
-    addFirestoreDepartingRcd = async (coords, tenMins, departingMinutes, setOrUpdateOrPrevious,
+    addFirestoreDepartingRcd = async (coords, vehicle, tenMins, departingMinutes, setOrUpdateOrPrevious,
                                       prevDibs, prevDibsDevId) => {
         try {
             let geofirestore;
 
             this.myBreadCrumbs('addFirestoreDepartingRcd', "myfuncs");
 
-            console.log("addFirestoreDepartingRcd:", coords, ":", tenMins, ":", departingMinutes, ":",
-                setOrUpdateOrPrevious, ":", prevDibs, ":", prevDibsDevId);
+            // console.log("addFirestoreDepartingRcd:", coords, ":", tenMins, ":", departingMinutes, ":",
+            //     setOrUpdateOrPrevious, ":", prevDibs, ":", prevDibsDevId);
             if (myfirestore === null)   // This should never be null, because we init at init.
                 this.initFirebase();
             try {
@@ -230,15 +241,18 @@ class myFuncs  {
                 this.myBreadCrumbs('Departing init again', "myfuncs");
                 myfuncs.myRepo(error);
             }
+            let vDesc = vehicle.description;
+            if (vehicle.plate.length > 0)
+                vDesc += " - Plate: " + vehicle.plate;
             let rcd = {
-                name: 'Red',
-                    dateTime: new Date(),
+                vehicle: vDesc,
+                dateTime: new Date(),
                 departingMinutes: departingMinutes,
                 // date3: firebase.firestore.Timestamp.fromDate(new Date()),
                 score: 100,
                 coordinates: new firebase.firestore.GeoPoint(coords.latitude, coords.longitude)
             };
-            if (setOrUpdateOrPrevious == 2) {
+            if (setOrUpdateOrPrevious === 2) {
                 rcd.dibs = prevDibs;
                 rcd.dibsDevId = prevDibsDevId;
             }
@@ -254,67 +268,13 @@ class myFuncs  {
             myfuncs.myRepo(error);
         }
     };
-    // doDepartingTransaction = async (geofirestore, tenMins, rcd, bPreviousTen, previousTenMinutes ) => {
-    //     let devId = Constants.default.deviceId;
-    //     let dMessage = null;
-    //     let bDoTheUpdate = false;
-    //     let retValue = 0;
-    //
-    //     let getCollection;
-    //     let setCollection;
-    //
-    //     setCollection = geofirestore.collection(ApiKeys.firebase_collection).
-    //         doc(myfuncs.getCollectionName(0)).collection(tenMins.toString());
-    //         // Yes, we have a slight window exposure of rolling over a month and it's exactly the millisec of roll-over, but so what.
-    //     if (bPreviousTen) {
-    //         getCollection = geofirestore.collection(ApiKeys.firebase_collection).
-    //             doc(myfuncs.getCollectionName(-1)).collection(previousTenMinutes.toString());
-    //     } else {
-    //         getCollection = geofirestore.collection(ApiKeys.firebase_collection).
-    //             doc(myfuncs.getCollectionName(0)).collection(tenMins.toString());
-    //     }
-    //
-    //     geofirestore.runTransaction(function(transaction) {
-    //         return transaction.get(getCollection.doc(devId)).then(function(existingDoc) {
-    //
-    //             // return transaction.get(collection.doc(rKey)).then(function(existingDoc) {
-    //
-    //
-    //
-    //                 if (!existingDoc.exists) {
-    //                 throw "Document does not exist!";
-    //             }
-    //             let eData = existingDoc.data().d;
-    //
-    //             rcd.dibs = eData.dibs;
-    //             rcd.dibsDevId = eData.dibsDevId;
-    //
-    //             if (bPreviousTen) {
-    //                 transaction.set(setCollection.doc(deviceId), rcd);
-    //             } else {
-    //                 transaction.update(setCollection.doc(deviceId), {d: rcd});
-    //             }
-    //             return "Successfully updated";
-    //         });
-    //     }).then(function(dMessage) {
-    //         console.log("Successful dMessage:", dMessage);
-    //         if (dMessage !== null)
-    //             Alert.alert(dMessage);
-    //     }).catch(function(dMessage) {
-    //         console.log("Error dMessage:", dMessage);
-    //     });
-    // };
-
-    updateFirestoreReservedRcd = async (space, bDibs) => {
+    updateFirestoreReservedRcd = async (space, bDibs, settings) => {
         try {
             let newFirestore;
-
             this.myBreadCrumbs('updateFirestoreReservedRcd', "myfuncs");
-
-            console.log("updateFirestore");
+            // console.log("updateFirestore");
             if (myfirestore === null)   // This should never be null, because we init at init.
                 this.initFirebase();
-
             try {
                 newFirestore = new firebase.firestore();
             }  catch (error) {
@@ -328,13 +288,9 @@ class myFuncs  {
             let collection = newFirestore.collection(ApiKeys.firebase_collection).
             doc(cName).collection(space.tenMinutes.toString());
 
-            // let devId = Constants.default.deviceId;
-            // if (bDibs === false)
-            //     devId = 0;
-            console.log(cName, "-", space.tenMinutes, "-", space.key,  ": updating Dibs:", bDibs);
-
+            // console.log(cName, "-", space.tenMinutes, "-", space.key,  ": updating Dibs:", bDibs);
             try {
-                await this.doReservedTransaction(newFirestore, collection, space.key, bDibs);
+                await this.doReservedTransaction(newFirestore, collection, space.key, bDibs, settings);
                     // await geocollection.doc(space.key).update({
                     //     dibs: bDibs,
                     //     dibsDevId: devId,
@@ -342,18 +298,12 @@ class myFuncs  {
             }  catch (error) {
                 console.log("Caught the error:", error);
             }
-
         } catch (error) {
             console.log("Firestore update error:", error);
             myfuncs.myRepo(error);
         }
     };
-
-    // geocollection.doc(rKey).set(rcd);
-    // transaction.update(sfDocRef, { population: newPopulation });
-
-
-    doReservedTransaction = async (firestore, collection, rKey, bDibs) => {
+    doReservedTransaction = async (firestore, collection, rKey, bDibs, settings) => {
         let devId = Constants.default.deviceId;
         let dMessage = null;
         let bDoTheUpdate = false;
@@ -373,7 +323,10 @@ class myFuncs  {
                     } else if (eData.dibsDevId !== devId) {
                         return "Sorry, someone else already has the space reserved";
                     } else {
-                        return "This space is already reserved for you";
+                        if (settings.confirmation_popups)
+                            return "This space is already reserved for you";
+                        else
+                            return null;
                     }
                 } else if (bDibs === false) {
                     if ((eData.dibs === true) && (eData.dibsDevId === devId)) {
@@ -384,19 +337,24 @@ class myFuncs  {
                 }
                 if (bDoTheUpdate) {
                     transaction.update(collection.doc(rKey), {d: eData});
-                    if (bDibs === true)
-                        return "Success. This space is currently reserved for you";
-                    else
-                        return "Space released for others";
+                    if (settings.confirmation_popups) {
+                        if (bDibs === true)
+                            return "Success. This space is currently reserved for you";
+                        else
+                            return "Space released for others";
+                    } else {
+                        return null;
+                    }
                 }
             });
         }).then(function(dMessage) {
-            console.log("Successful dMessage:", dMessage);
+            // console.log("Successful dMessage:", dMessage);
+
             if (dMessage !== null)
-                Alert.alert(dMessage);
+                Alert.alert(dMessage, null);
         }).catch(function(dMessage) {
             console.log("Error dMessage:", dMessage);
-            Alert.alert("Error reserving space, sorry");
+            Alert.alert("Error reserving space, sorry", null);
         });
     };
 
@@ -421,6 +379,12 @@ class myFuncs  {
     };
     isEmpty = (myObj) => {
         return !myObj || Object.keys(myObj).length === 0;
+    };
+    androidPadding = (textFocused, extraPad) => {
+        let padLines = 0;
+        if (Platform.OS === 'android' && textFocused === true)
+            padLines = 100 + extraPad;
+        return(padLines);
     };
     isAndroid = () => {
         if (Platform.OS === 'android')

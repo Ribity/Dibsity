@@ -41,14 +41,15 @@ export default class PrivacyScreen extends React.Component {
                             <View>
 
                             <Text style={styles.privacyText}>
-                                You have total privacy.
+                                Dibsity values preserves your total privacy.
                             </Text>
+                                <Text style={styles.privacyText}>
+                                    There is no sign-up or login-in.
+                                </Text>
                             <Text style={styles.privacyText}>
-                                Dibsity does not sell your personal data.
+                                Dibsity does not collect or sell your personal data.
                             </Text>
-                            <Text style={styles.privacyText}>
-                               There is no sign-up or login-in.
-                            </Text>
+
                             <Text style={styles.privacyText}>
                                 We will never ask for your EMail address or phone number.
                                 We provide Dibsity as a hobby.

@@ -8,6 +8,7 @@ import myStyles from "../myStyles";
 import {connect} from "react-redux";
 import {bindActionCreators} from "redux";
 import {updateSettings} from "../actions/settingsActions";
+import {updateVehicle} from "../actions/vehicleActions";
 import {updateParkedLocation} from "../actions/ParkedLocationActions";
 import TasksComponent from '../components/TasksComponent';
 import WaitComponent  from './../components/WaitComponent';
@@ -23,6 +24,7 @@ import ApiKeys from "../constants/ApiKeys";
 import {SaveParkedIcon} from "../components/SaveParkedIcon";
 import {DepartParkedIcon} from "../components/DepartParkedIcon";
 import * as Constants from "expo-constants";
+import {setRefreshMap} from "../actions/TasksActions";
 
 // The following code was added because the latest firestore has bugs/exceptions (crypto) with react native.
 //  but expo 37 imports a previous version of firestore that is compatible, so no longer needed
@@ -43,6 +45,7 @@ const initialState = {
     readyToGo: false,
     isAuthenticated: false,
     bUserSavedParkingLocation: false,
+    refresh_map: false,
 };
 
 class MapScreen extends React.Component {
@@ -53,8 +56,6 @@ class MapScreen extends React.Component {
             return {
                 headerLeft: () => <LogoComponent/>,
                 headerTitle: () => <ScreenTitle title={"Dibsity"} privacy={() => navigation.navigate("PrivacyMap")}/>,
-
-
             };
         } catch (error) {
             myfuncs.myRepo(error);
@@ -64,6 +65,7 @@ class MapScreen extends React.Component {
     constructor(props) {
         super(props);
         this.state = initialState;
+        this.refreshMapId = -1;
         this.componentWillFocus = this.componentWillFocus.bind(this);
         this.componentWillUnmount = this.componentWillUnmount.bind(this);
     };
@@ -103,8 +105,11 @@ class MapScreen extends React.Component {
                 this.setState({bUserSavedParkingLocation: true});
             }
 
+            // console.log("mk1a:", retObj);
             await this.props.updateSettings(retObj.settings);
+            await this.props.updateVehicle(retObj.vehicle);
             myfuncs.setAwakeorNot(this.props.settings.keep_awake);
+            // console.log("mk1aa vehicle:", this.props.vehicle);
 
             // await this.initFirebase();
 
@@ -164,9 +169,12 @@ class MapScreen extends React.Component {
             // if (prevState.stories_list !== nextProps.stories_list) {
             //     update.stories_list = nextProps.stories_list;
             // }
-            // if (prevState.profiles !== nextProps.profiles) {
-            //     update.profiles = nextProps.profiles;
-            // }
+
+            // console.log("nextProps:", nextProps);
+            if (prevState.refresh_map !== nextProps.tasks.refresh_map) {
+                update.refresh_map = nextProps.tasks.refresh_map;
+                // console.log("update.refresh_map:", update.refresh_map);
+            }
             return Object.keys(update).length ? update: null;
         } catch (error) {
             myfuncs.myRepo(error);
@@ -223,13 +231,21 @@ class MapScreen extends React.Component {
         try {
             myfuncs.myBreadCrumbs('parkedLocation', this.props.navigation.state.routeName);
 
-            console.log("user clicked save parking location");
-            Alert.alert("Are you at the exact location where your vehicle is parked?",
-                "If not, please remember to save your location the next time you park.",
-                [
-                    {text: 'No'},
-                    {text: 'Yes', onPress: () => {this.saveParkedLocation(this.props.location)}},
-                ]);
+            // console.log("user clicked save parking location");
+
+            if (this.props.settings.confirmation_popups) {
+                Alert.alert("Are you at the exact location where your vehicle is parked?",
+                    "If not, please remember to save your location the next time you park.",
+                    [
+                        {text: 'No'},
+                        {
+                            text: 'Yes', onPress: () => {
+                                this.saveParkedLocation(this.props.location)
+                            }
+                        },
+                    ]);
+            } else
+                this.saveParkedLocation(this.props.location)
         } catch (error) {
             myfuncs.myRepo(error);
         }
@@ -276,11 +292,20 @@ class MapScreen extends React.Component {
         mapScreenSpaces = myfuncs.clone(newSpaces);
         // console.log("mapScreenSpaces:", mapScreenSpaces);
     };
+    timerRefreshMap = () => {
+        this.props.setRefreshMap(false);
+        this.setState({refresh_map: false});
+        this.refreshMapId = -1;
+    };
 
     render() {
         try {
             myfuncs.myBreadCrumbs('render', this.props.navigation.state.routeName);
 
+            if (this.state.refresh_map === true && this.refreshMapId === -1) {
+                this.refreshMapId = setTimeout(() => {this.timerRefreshMap()}, 1000);
+            }
+            // console.log("State.refresh_map:", this.state.refresh_map);
             return (
                 <View style={myStyles.container}>
                        <TasksComponent/>
@@ -288,18 +313,33 @@ class MapScreen extends React.Component {
                        {this.state.readyToGo === false &&
                        <WaitComponent/>
                        }
-                        {(this.state.readyToGo === true && MyDefines.default_tasks.refresh_map === false) &&
+
+                        {this.state.refresh_map === true &&
+                        <View style={myStyles.myCenter}>
+                            <Text>You modified pertinent map parms</Text>
+                            <View style={{padding: 10}}/>
+                            <Text>Refreshing the map</Text>
+                            <View style={{padding: 10}}/>
+                            <Text>If map does not display after 20 seconds,</Text>
+                            <View style={{padding: 1}}/>
+                            <Text>Or if you experience map problems,</Text>
+                            <View style={{padding: 1}}/>
+                            <Text>you'll need to restart the app</Text>
+                        </View>
+                        }
+
+                        {(this.state.readyToGo === true && this.state.refresh_map === false) &&
                         <MapComponent navigation={this.props.navigation}
                                       onSaveParkedLocation={this.saveParkedLocation}
                                       onDepartingShortly={this.onDepartingShortlyPress}
                                       parentSpaces={this.mySpaces}
                         />
                         }
-                        {(this.state.readyToGo === true && MyDefines.default_tasks.refresh_map === false) &&
+                        {(this.state.readyToGo === true && this.state.refresh_map === false) &&
                         <SaveParkedIcon onPress={this.parkedLocation} />
                         }
                         {(this.state.readyToGo === true &&
-                            MyDefines.default_tasks.refresh_map === false &&
+                            this.state.refresh_map === false &&
                             this.state.bUserSavedParkingLocation) &&
                         <DepartParkedIcon onPress={this.onDepartingShortlyPress} />
                         }
@@ -363,6 +403,12 @@ class MapScreen extends React.Component {
     onDepartingShortlyPress = () => {
         try {
             myfuncs.myBreadCrumbs('onDepartingShortlyPress', this.props.navigation.state.routeName);
+            if (this.props.vehicle.description.length < 1) {
+                Alert.alert("Please set your vehicle's desciption to assist others in finding your space", null);
+                this.props.navigation.navigate("myVehicle");
+                return;
+            }
+
             this.setState({isDepartingShortlyModalVisible: true});
         } catch (error) {
             myfuncs.myRepo(error);
@@ -392,7 +438,7 @@ class MapScreen extends React.Component {
             // console.log("mapScreenSpaces:", mapScreenSpaces);
             for (let i=0; i<mapScreenSpaces.length; i++) {
                 if (mapScreenSpaces[i].key === Constants.default.deviceId) {
-                    console.log("m:", mapScreenSpaces.tenMinutes, ",t:", thisTenMins);
+                    // console.log("m:", mapScreenSpaces[i].tenMinutes, ",t:", thisTenMins);
                     if (mapScreenSpaces[i].tenMinutes === thisTenMins) {
                         bUpdate = true;
                     } else {
@@ -409,8 +455,8 @@ class MapScreen extends React.Component {
             if (bUpdate === true)
                 setOrUpdateOrPrevious = 1;
 
-            myfuncs.addFirestoreDepartingRcd(this.props.parkedLocation.coords, thisTenMins, minutes,
-                setOrUpdateOrPrevious, prevDibs, prevDibsDevId);
+            myfuncs.addFirestoreDepartingRcd(this.props.parkedLocation.coords, this.props.vehicle,
+                thisTenMins, minutes, setOrUpdateOrPrevious, prevDibs, prevDibsDevId);
         } catch (error) {
             myfuncs.myRepo(error);
         }
@@ -419,7 +465,7 @@ class MapScreen extends React.Component {
 const styles = StyleSheet.create({
     WelcomeUser: {
         position: 'absolute',
-        bottom: (height/2 + height/5 - MyDefines.myStatusBarHeight),
+        top: (height/4),
         fontSize: 22,
         fontStyle: 'italic',
         fontWeight: 'bold',
@@ -432,12 +478,16 @@ const mapStateToProps = (state) => {
     const { settings } = state;
     const { location } = state;
     const { parkedLocation } = state;
-    return { settings, location, parkedLocation}
+    const { vehicle } = state;
+    const { tasks } = state;
+    return { settings, location, parkedLocation, vehicle, tasks}
 };
 const mapDispatchToProps = dispatch => (
     bindActionCreators({
         updateSettings,
+        updateVehicle,
         updateParkedLocation,
+        setRefreshMap,
     }, dispatch)
 );
 export default connect(mapStateToProps, mapDispatchToProps)(MapScreen);

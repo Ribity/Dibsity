@@ -32,7 +32,7 @@ const {height, width} = Dimensions.get('window');
 class SettingsDefaultMapScreen extends React.Component {
     static navigationOptions = ({navigation}) => {
         try {
-            myfuncs.myBreadCrumbs('navigationOptions', 'SettingsDefaultMapScreen');
+            myfuncs.myBreadCrumbs('navigationOptions', 'SettingsDefaultMap');
 
             return {
                 headerTitle: () => <ScreenTitle title={"Map Settings"} privacy={() => navigation.navigate("PrivacySettings")}/>,
@@ -46,7 +46,7 @@ class SettingsDefaultMapScreen extends React.Component {
         super(props);
         this.state = {
             isModalVisible: false,
-            settings: this.props.settings,
+            settings: {...this.props.settings}
         };
     }
     onSubmitPress = () => {
@@ -103,7 +103,6 @@ class SettingsDefaultMapScreen extends React.Component {
                 this.props.setRefreshMap(true);
                 this.props.setPannedMap(false);
             }
-
             this.props.updateSettings( {...this.props.settings, ...this.state.settings} );
             this.updateStorage();
             this.refs.toast.show("Updated Successfully", 2000);

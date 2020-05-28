@@ -772,7 +772,7 @@ class MapComponent extends React.Component {
 
             Alert.alert("Current parked location","You also may drag the Park icon to a new location",
                 [
-                    {text: 'Cancel'},
+                    {text: 'Ok'},
                     {text: 'Clear saved location', onPress: () => {this.props.onSaveParkedLocation(0)} },
                 ]);
 

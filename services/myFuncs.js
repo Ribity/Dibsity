@@ -222,7 +222,7 @@ class myFuncs  {
     // Or have a small exposure and just preserve the dibs and devId from the state.spaces
     // which has the exposure of ships passing in the night.
     addFirestoreDepartingRcd = async (coords, vehicle, tenMins, departingMinutes, setOrUpdateOrPrevious,
-                                      prevDibs, prevDibsDevId) => {
+                                      prevDibs, prevDibsDevId, settings) => {
         try {
             let geofirestore;
 
@@ -248,14 +248,19 @@ class myFuncs  {
                 vehicle: vDesc,
                 dateTime: new Date(),
                 departingMinutes: departingMinutes,
-                // date3: firebase.firestore.Timestamp.fromDate(new Date()),
-                score: 100,
+                communalIds: settings.communal_id,
                 coordinates: new firebase.firestore.GeoPoint(coords.latitude, coords.longitude)
             };
             if (setOrUpdateOrPrevious === 2) {
                 rcd.dibs = prevDibs;
                 rcd.dibsDevId = prevDibsDevId;
             }
+            if (settings.postCommunal === true) {
+                rcd.communalIds = settings.communal_id;
+            } else {
+                rcd.communalIds = null;
+            }
+
             let geocollection = geofirestore.collection(ApiKeys.firebase_collection).
                     doc(myfuncs.getCollectionName(0)).collection(tenMins.toString());
             if (setOrUpdateOrPrevious === 1) {

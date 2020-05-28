@@ -24,12 +24,22 @@ export default {
     default_settings: {
         keep_awake: true,
         confirmation_popups: true,
+        dynamic_icons: true,
+        postCommunal: false,
+
         refocus_seconds: 8,
         zoom_multiplier: 3,
         map_user_size: 2,
         map_user_icon: 2,
         map_orients_to_users_bearing: 1,
-        dynamic_icons: true,
+
+        communal_id: [
+           "",
+           "",
+           "",
+           "",
+           "",
+        ],
     },
 
     default_vehicle: {

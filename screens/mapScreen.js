@@ -372,8 +372,9 @@ class MapScreen extends React.Component {
                                     onExitPress={this.onHelpExitPress}
                                     isVisible={this.state.isHelpModalVisible}/>
                         <DepartingShortlyModal onMinutesPressed={this.DepartingMinutesPressed}
-                                         onExitPress={this.onDepartingShortlyExitPress}
-                                         isVisible={this.state.isDepartingShortlyModalVisible}/>
+                                               onExitPress={this.onDepartingShortlyExitPress}
+                                               settings={this.props.settings}
+                                               isVisible={this.state.isDepartingShortlyModalVisible}/>
                 </View>
             );
         } catch (error) {
@@ -422,7 +423,7 @@ class MapScreen extends React.Component {
             myfuncs.myRepo(error);
         }
     };
-    DepartingMinutesPressed = (minutes) => {
+    DepartingMinutesPressed = (minutes, bCommunalIds) => {
         try {
             myfuncs.myBreadCrumbs('DepartingMinutesPressed', this.props.navigation.state.routeName);
             let bUpdate = false;
@@ -443,8 +444,10 @@ class MapScreen extends React.Component {
                         bUpdate = true;
                     } else {
                         bPreservePreviousTen = true;
-                        prevDibs = mapScreenSpaces[i].dibs;
-                        prevDibsDevId = mapScreenSpaces[i].dibsDevId;
+                        if (mapScreenSpaces[i].dibs !== undefined)
+                            prevDibs = mapScreenSpaces[i].dibs;
+                        if (mapScreenSpaces[i].dibsDevId !== undefined)
+                            prevDibsDevId = mapScreenSpaces[i].dibsDevId;
                     }
                 }
             }
@@ -456,7 +459,7 @@ class MapScreen extends React.Component {
                 setOrUpdateOrPrevious = 1;
 
             myfuncs.addFirestoreDepartingRcd(this.props.parkedLocation.coords, this.props.vehicle,
-                thisTenMins, minutes, setOrUpdateOrPrevious, prevDibs, prevDibsDevId);
+                thisTenMins, minutes, setOrUpdateOrPrevious, prevDibs, prevDibsDevId, this.props.settings);
         } catch (error) {
             myfuncs.myRepo(error);
         }

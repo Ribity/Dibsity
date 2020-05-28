@@ -1,5 +1,5 @@
 import React from 'react';
-import {StyleSheet, View, Dimensions, Text} from 'react-native'
+import {StyleSheet, View, Dimensions, Text, Alert} from 'react-native'
 import {SafeAreaView} from "react-navigation";
 import myfuncs from "../services/myFuncs";
 import MyDefines from "../constants/MyDefines";
@@ -33,7 +33,7 @@ class SettingsScreen extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            settings: this.props.settings,
+            settings: {...this.props.settings}
         };
     };
     componentDidMount() {
@@ -48,9 +48,9 @@ class SettingsScreen extends React.Component {
             myfuncs.myBreadCrumbs('getDerivedStateFromProps', "Settings");
             let update = {};
 
-            // if (prevState.settings !== nextProps.settings) {
-            //     update.settings = nextProps.settings;
-            // }
+            if (prevState.settings !== nextProps.settings) {
+                update.settings = nextProps.settings;
+            }
             return Object.keys(update).length ? update: null;
         } catch (error) {
             myfuncs.myRepo(error);
@@ -62,9 +62,7 @@ class SettingsScreen extends React.Component {
             return (
                 <View style={{backgroundColor:'#EFEFF4',flex:1}}>
 
-
                     <SettingsList borderColor='#c8c7cc' defaultItemSize={50}>
-
 
                         <SettingsList.Item
                             hasSwitch={true}
@@ -87,8 +85,24 @@ class SettingsScreen extends React.Component {
                             switchState={this.state.settings.dynamic_icons}
                             switchOnValueChange={(bEvent) => this.updateSettings({dynamic_icons: bEvent})}
                             hasNavArrow={false}
-                            title='Dynamic Departure Sizes'
+                            title='Dynamic Icon Sizes'
                             titleStyle={{fontSize:20}}
+                        />
+                        <SettingsList.Item
+                            hasSwitch={true}
+                            switchState={this.state.settings.postCommunal}
+                            switchOnValueChange={(bEvent) => this.updateSettings({postCommunal: bEvent})}
+                            hasNavArrow={false}
+                            title='Post your departures privately to your Communals'
+                            titleStyle={{fontSize:20}}
+                        />
+
+                        <SettingsList.Item
+                            title='Communal Ids'
+                            titleInfo='List of Ids'
+                            titleInfoStyle={styles.titleInfoStyle}
+                            titleStyle={{fontSize:20}}
+                            onPress={() => this.props.navigation.navigate("SettingsCommunal")}
                         />
 
                         <SettingsList.Item
@@ -114,8 +128,35 @@ class SettingsScreen extends React.Component {
     updateSettings = async (new_prop) => {
         try {
             myfuncs.myBreadCrumbs('updateSettings', this.props.navigation.state.routeName);
-            let new_settings = {...this.state.settings, ...new_prop};
-
+            try {
+                if (new_prop.postCommunal !== undefined) {
+                    let bOneDefined = false;
+                    if (new_prop.postCommunal === true) {
+                        for (let i=0; i<5; i++) {
+                            if (this.props.settings.communal_id[i].length > 0) {
+                                bOneDefined = true;
+                                break;
+                            }
+                        }
+                        if (bOneDefined === false) {
+                            Alert.alert("You must define one or more Communal Ids");
+                            return;
+                        }
+                        Alert.alert(
+                            "Your departures will be posted ONLY to users that list at least one of your private Communal Ids. " +
+                            "Your departures will NOT be posted to everyone",
+                            "When arriving, you will see soon-to-be-available 'public' spaces plus soon-to-be=available spaces of your fellow communal users");
+                    } else {
+                        Alert.alert("Your departures will not be communal-only. " +
+                            "Your departures will be posted to ALL Dibsity users",
+                            "When arriving, you will see soon-to-be-available 'public' spaces plus soon-to-be-available spaces of your fellow communal users");
+                    }
+                }
+            } catch (error) {
+                console.log(error);
+                myfuncs.myRepo(error);
+            }
+            let new_settings = {...this.props.settings, ...new_prop};
             // Note, no need to update state, because state auto-updates in getDerivedState
             this.setState({settings: new_settings});
             await this.props.updateSettings(new_settings);

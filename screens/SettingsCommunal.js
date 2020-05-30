@@ -76,8 +76,7 @@ class SettingsCommunalScreen extends React.Component {
                     "Your departures will NOT be posted to everyone", "When arriving, " +
                     "you will see soon-to-be-available 'public' spaces plus soon-to-be-available spaces of your fellow communal users");
             }
-
-            this.props.updateSettings( {...this.props.settings, ...new_settings} );
+            await this.props.updateSettings( {...this.props.settings, ...new_settings} );
             this.updateStorage();
             this.refs.toast.show("Updated Successfully", 2000);
 
@@ -97,9 +96,9 @@ class SettingsCommunalScreen extends React.Component {
                     keyboardShouldPersistTaps={'handled'}
                     contentContainerStyle={myStyles.container}
                 >
-                    <Text style={myStyles.infoTextTopMargin}>Each 'Private ID' you enter here will be used for your
-                        identify you communities. Any Dibsity user that also has one of your IDs list will
-                        see your posted departures when you post to 'Communal Only'</Text>
+                    <Text style={myStyles.infoTextTopMargin}>Each 'Communal ID' you enter will be used to
+                        identify your communities. Any Dibsity user that also has one of your IDs listed will
+                        see your posted departures when you post your departure</Text>
 
 
                     <View style={{paddingTop: 15}}/>
@@ -112,7 +111,7 @@ class SettingsCommunalScreen extends React.Component {
                                        onChangeText={(text) => this.updateState(index, text)}
                                        clearButtonMode='always'
                                        placeholder={"Id #" + (index+1).toString()}
-                                       maxLength={10}
+                                       maxLength={25}
                                        returnKeyType="done"
                                        placeholderTextColor={"grey"}
                             />

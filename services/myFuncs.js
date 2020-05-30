@@ -55,8 +55,8 @@ class myFuncs  {
 
             // console.log("1st parkLoc from hardStorage:", parkedLocation);
             if (parkedLocation === null || parkedLocation === 0 ||
-                (typeof parkedLocation.coords === "undefined") )
-                parkedLocation = {};
+                (typeof parkedLocation.location.coords === "undefined") )
+                parkedLocation.location = {};
             // console.log("2nd parkLoc from hardStorage:", parkedLocation);
 
             // console.log("init after");
@@ -221,7 +221,7 @@ class myFuncs  {
     // and then the db.transaction knows to read the previous tenMinutes.
     // Or have a small exposure and just preserve the dibs and devId from the state.spaces
     // which has the exposure of ships passing in the night.
-    addFirestoreDepartingRcd = async (coords, vehicle, tenMins, departingMinutes, setOrUpdateOrPrevious,
+    addFirestoreDepartingRcd = async (coords, note, vehicle, tenMins, departingMinutes, setOrUpdateOrPrevious,
                                       prevDibs, prevDibsDevId, settings) => {
         try {
             let geofirestore;
@@ -241,11 +241,13 @@ class myFuncs  {
                 this.myBreadCrumbs('Departing init again', "myfuncs");
                 myfuncs.myRepo(error);
             }
+            // console.log("myFuncs Settings:", settings);
             let vDesc = vehicle.description;
             if (vehicle.plate.length > 0)
                 vDesc += " - Plate: " + vehicle.plate;
             let rcd = {
                 vehicle: vDesc,
+                note: note,
                 dateTime: new Date(),
                 departingMinutes: departingMinutes,
                 communalIds: settings.communal_id,

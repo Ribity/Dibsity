@@ -1,7 +1,8 @@
 import React from 'react';
-import {Alert, StyleSheet, View, Dimensions, Image, Text, TouchableOpacity, Platform} from 'react-native';
+import {Alert, StyleSheet, View, Dimensions, Image, Text, TouchableOpacity, Platform, TextInput} from 'react-native';
 import MapComponent from '../components/MapComponent';
 
+import Dialog from "react-native-dialog";
 import Toast from 'react-native-easy-toast';
 import MyDefines from '../constants/MyDefines';
 import myStyles from "../myStyles";
@@ -46,6 +47,8 @@ const initialState = {
     isAuthenticated: false,
     bUserSavedParkingLocation: false,
     refresh_map: false,
+    dialogVisible: false,
+    note: "",
 };
 
 class MapScreen extends React.Component {
@@ -100,8 +103,9 @@ class MapScreen extends React.Component {
             myfuncs.myBreadCrumbs('getUserStoredData', this.props.navigation.state.routeName);
             let retObj = await myfuncs.init();
 
-            if (myfuncs.isLocationValid(retObj.parkedLocation)) {
-                this.props.updateParkedLocation(retObj.parkedLocation);
+            if (myfuncs.isLocationValid(retObj.parkedLocation.location)) {
+                this.props.updateParkedLocation(retObj.parkedLocation.location);
+                this.setState({note: retObj.parkedLocation.note});
                 this.setState({bUserSavedParkingLocation: true});
             }
 
@@ -230,36 +234,32 @@ class MapScreen extends React.Component {
     parkedLocation = () => {
         try {
             myfuncs.myBreadCrumbs('parkedLocation', this.props.navigation.state.routeName);
-
             // console.log("user clicked save parking location");
-
-            if (this.props.settings.confirmation_popups) {
-                Alert.alert("Are you at the exact location where your vehicle is parked?",
-                    "If not, please remember to save your location the next time you park.",
-                    [
-                        {text: 'No'},
-                        {
-                            text: 'Yes', onPress: () => {
-                                this.saveParkedLocation(this.props.location)
-                            }
-                        },
-                    ]);
-            } else
-                this.saveParkedLocation(this.props.location)
+            this.showDialog();
         } catch (error) {
             myfuncs.myRepo(error);
         }
+    };
+    showDialog = () => {
+        this.setState({note: ""});
+        this.setState({ dialogVisible: true });
+    };
+    handleCancel = () => {
+        this.setState({ dialogVisible: false });
+    };
+    handleYes = () => {
+        this.setState({ dialogVisible: false });
+        this.saveParkedLocation(this.props.location);
+    };
+    updateNoteState = (text) => {
+        this.setState({note: text});
     };
     saveParkedLocation = (newLocation) => {
         try {
             myfuncs.myBreadCrumbs('saveParkedLocation', this.props.navigation.state.routeName);
             if (newLocation === 0) {
                 console.log("Clearing parked location");
-
-                // mk1 need to write code to clear parking spot from storage, and read it upon init
-
-                this.props.updateParkedLocation({});
-                myfuncs.writeUserDataToLocalStorage("parkedLocation", {});
+                this.saveParkedLocationToStorage({});
                 this.setState({bUserSavedParkingLocation: false});
                 this.refs.toast.show("Parking Location Cleared", 3000);
                 this.refs.toastCenter.show("Parking Location Cleared", 3000);
@@ -269,15 +269,12 @@ class MapScreen extends React.Component {
                 if (MyDefines.fakeParkedLocation === true) {
                     if (Platform.OS === 'android') {
                         console.log("Saving Android fake parked location");
-                        this.props.updateParkedLocation(MyDefines.fake_parked_location_android);
-                        myfuncs.writeUserDataToLocalStorage("parkedLocation", MyDefines.fake_parked_location_android);
+                        this.saveParkedLocationToStorage(MyDefines.fake_parked_location_android);
                     } else {
-                        this.props.updateParkedLocation(MyDefines.fake_parked_location);
-                        myfuncs.writeUserDataToLocalStorage("parkedLocation", MyDefines.fake_parked_location);
+                        this.saveParkedLocationToStorage(MyDefines.fake_parked_location);
                     }
                 } else {
-                    this.props.updateParkedLocation(newLocation);
-                    myfuncs.writeUserDataToLocalStorage("parkedLocation", newLocation);
+                    this.saveParkedLocationToStorage(newLocation);
                 }
                 this.setState({bUserSavedParkingLocation: true});
                 this.refs.toast.show("Parking Location Saved", 3000);
@@ -288,6 +285,10 @@ class MapScreen extends React.Component {
             myfuncs.myRepo(error);
         }
     };
+    saveParkedLocationToStorage = (location) => {
+        this.props.updateParkedLocation(location);
+        myfuncs.writeUserDataToLocalStorage("parkedLocation", {location: location, note: this.state.note});
+    };
     mySpaces = (newSpaces)  => {
         mapScreenSpaces = myfuncs.clone(newSpaces);
         // console.log("mapScreenSpaces:", mapScreenSpaces);
@@ -297,7 +298,6 @@ class MapScreen extends React.Component {
         this.setState({refresh_map: false});
         this.refreshMapId = -1;
     };
-
     render() {
         try {
             myfuncs.myBreadCrumbs('render', this.props.navigation.state.routeName);
@@ -347,6 +347,21 @@ class MapScreen extends React.Component {
                        {this.state.welcomeTheUser === true &&
                        <Text style={styles.WelcomeUser}>Welcome</Text>
                        }
+                    <Dialog.Container visible={this.state.dialogVisible}>
+                        <Dialog.Title>
+                            Are you at the exact location where your vehicle is parked?
+                        </Dialog.Title>
+                        <Dialog.Description>
+                            If not, please remember to save your location the next time you park
+                        </Dialog.Description>
+                        <Dialog.Input label={"Additional Info (Garage Level, Fees, etc):"}
+                                      value={this.state.note}
+                                      onChangeText={(text) => this.updateNoteState(text)}
+                        >
+                        </Dialog.Input>
+                        <Dialog.Button label="Cancel" onPress={this.handleCancel} />
+                        <Dialog.Button label="Yes" onPress={this.handleYes} />
+                    </Dialog.Container>
 
                        <Toast
                            ref="toast"
@@ -409,7 +424,6 @@ class MapScreen extends React.Component {
                 this.props.navigation.navigate("myVehicle");
                 return;
             }
-
             this.setState({isDepartingShortlyModalVisible: true});
         } catch (error) {
             myfuncs.myRepo(error);
@@ -458,7 +472,7 @@ class MapScreen extends React.Component {
             if (bUpdate === true)
                 setOrUpdateOrPrevious = 1;
 
-            myfuncs.addFirestoreDepartingRcd(this.props.parkedLocation.coords, this.props.vehicle,
+            myfuncs.addFirestoreDepartingRcd(this.props.parkedLocation.coords, this.state.note, this.props.vehicle,
                 thisTenMins, minutes, setOrUpdateOrPrevious, prevDibs, prevDibsDevId, this.props.settings);
         } catch (error) {
             myfuncs.myRepo(error);

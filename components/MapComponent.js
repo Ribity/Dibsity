@@ -479,14 +479,14 @@ class MapComponent extends React.Component {
             let secsDeparting = rcd.dateTime.seconds + rcd.departingMinutes*60;
             let minsRemaining = this.calcRemainingMinutes(secsDeparting, rcd.departingMinutes);
             // console.log("minsRemaining:", minsRemaining);
-            // console.log("addSpace Listener", idx, ":RCD:", rcd);
+            console.log("addSpace Listener", idx, ":RCD:", rcd);
             // console.log("addSpace Listener", idx, ":ID:", devId);
             // console.log("addSpace Listener", idx, ":TEN", this.listenerTenMinutes[idx]);
 
             // if (!myfuncs.isEmpty(rcd.timestamp)) {
             //     console.log("addSpace timeStamp true");
             // }
-            let joined = this.state.spaces;
+            let joined = [...this.state.spaces];
             let index = joined.findIndex(space => space.key === devId);
             if (index >= 0) {
                 // console.log("found previous devId space tenMinutes:", joined[index].tenMinutes);
@@ -516,6 +516,8 @@ class MapComponent extends React.Component {
                 newSpace.secsDeparting = secsDeparting;
                 newSpace.dibs = rcd.dibs;
                 newSpace.dibsDevId = rcd.dibsDevId;
+                newSpace.communalIds = rcd.communalIds;
+                newSpace.note = rcd.note;
                 this.setMinutesRemainingIcon(newSpace);
 
                 joined = joined.concat(newSpace);
@@ -524,6 +526,7 @@ class MapComponent extends React.Component {
                 this.setState({spaces: joined});
                 this.props.parentSpaces(joined);
             }
+            // console.log("Spaces:", joined);
 
             if (MyDefines.log_details)
                 console.log("Spaces:", joined);
@@ -718,8 +721,11 @@ class MapComponent extends React.Component {
             let distance = myfuncs.calcDistance({"latitude": space.latitude, "longitude": space.longitude},
                 this.props.location.coords);
             // console.log("Distance from space: ", distance);
+            let myNote = "";
+            if (space.note !== undefined && space.note !== null && space.note.length > 0)
+                myNote = " - " + space.note;
             if (space.key === Constants.deviceId) {
-                Alert.alert(space.vehicle, "This is your parking space",
+                Alert.alert(space.vehicle + myNote, "This is your parking space",
                     [
                         {text: 'Ok'},
                         {
@@ -733,7 +739,7 @@ class MapComponent extends React.Component {
 
             if (space.dibs === true) {
                 if (space.dibsDevId === Constants.deviceId) {
-                    Alert.alert(space.vehicle, "You currently have this space reserved",
+                    Alert.alert(space.vehicle + myNote, "You currently have this space reserved",
                         [
                             {text: 'OK, My turn signal is on'},
                             {
@@ -743,10 +749,10 @@ class MapComponent extends React.Component {
                             },
                         ]);
                 } else {
-                    Alert.alert(space.vehicle, "Someone already reserved this spot");
+                    Alert.alert(space.vehicle + myNote, "Someone already reserved this spot");
                 }
             } else if (distance < 25) {
-                Alert.alert(space.vehicle, "Activate your vehicle's turn signal, and reserve it ...",
+                Alert.alert(space.vehicle + myNote, "Activate your vehicle's turn signal, and reserve it ...",
                     [
                         {text: 'Cancel'},
                         {
@@ -756,7 +762,7 @@ class MapComponent extends React.Component {
                         },
                     ]);
             } else {
-                Alert.alert(space.vehicle, 'You must be within 25 meters to reserve this spot');
+                Alert.alert(space.vehicle + myNote, 'You must be within 25 meters to reserve this spot');
             }
         } catch (error) {
             myfuncs.myRepo(error);
@@ -839,6 +845,39 @@ class MapComponent extends React.Component {
         this.userHasControl = false;
         this.props.setPannedMap(false);
     };
+    dispSpace = (space) => {
+        try {
+            myfuncs.myBreadCrumbs('dispSpace', this.props.navigation.state.routeName);
+            let bDisp = true;
+            let bCommunalOnly = false;
+            let bMatchedMyCommunalList = false;
+
+            // console.log("dispSpace:", space);
+            // console.log("dispSpace Setting.communal_ids:", this.props.settings.communal_id);
+
+            if (space.communalIds !== undefined && space.communalIds !== null) {
+                // console.log("space has communalId field");
+                for (let i = 0; i < 5; i++) {
+                    if (space.communalIds[i] !== undefined && space.communalIds[i] !== null && space.communalIds[i].length > 0) {
+                        // console.log("space.communalIds", i, " : ", space.communalIds[i]);
+                        bCommunalOnly = true;
+                        for (let j=0; j<5; j++) {
+                            if (space.communalIds[i].toUpperCase() === this.props.settings.communal_id[j].toUpperCase()) {
+                                // console.log("space.CommunalIds", j, " : ", "matched");
+                                bMatchedMyCommunalList = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            if (bCommunalOnly === true && bMatchedMyCommunalList === false)
+                bDisp = false;
+            return bDisp;
+        } catch (error) {
+            myfuncs.myRepo(error);
+        }
+    };
     render() {
         try {
             myfuncs.myBreadCrumbs('render', "MapComponent");
@@ -850,6 +889,7 @@ class MapComponent extends React.Component {
                 else
                     userIcon = userIcon2w;
             }
+            let myNote;
             let rWidth  = 23;
             let rHeight = 23;
             if (this.state.iconOpacity < 1) {
@@ -867,6 +907,7 @@ class MapComponent extends React.Component {
             // console.log("state.parkedLocation:", this.state.parkedLocation);
             // console.log("bDPicon:", this.state.bDisplayParkedIcon);
             // console.log("parkedLocation:", this.state.parkedLocation);
+            // console.log("rendSpaces:", this.state.spaces);
 
 
                 return (
@@ -931,24 +972,35 @@ class MapComponent extends React.Component {
                                 />
                             </MapView.Marker.Animated>
 
-                            {this.state.spaces.map((space, index) => (
-                                <MapView.Marker
-                                    key={index}
-                                    coordinate={{longitude: space.longitude, latitude: space.latitude}}
-                                    title={space.vehicle}
-                                    // description={"Headed"}
-                                    onPress={() => this.onPressSpace(space)}
-                                    anchor={{x: 0.5, y: 0.5}}   // This puts the Android image in center.
-                                >
-                                    <Image style={[styles.imageContainer,
-                                        {width: space.width, height: space.height, resizeMode: 'contain'}]}
-                                    />
-                                    <View style={[styles.overlay, {backgroundColor: space.bgColor}]} />
-                                    <View style={styles.rectText}>
-                                        <Text style={{color: space.fColor, fontWeight: 'bold', fontSize: space.fSize}}>{space.minsRemaining}</Text>
-                                    </View>
-                                </MapView.Marker>
-                            ))}
+                            {this.state.spaces.map((space, index) => {
+                                if (space.note !== undefined && space.note !== null && space.note.length > 0)
+                                    myNote = space.vehicle + " - " + space.note;
+                                else
+                                    myNote = space.vehicle;
+                                if (this.dispSpace(space) === true)
+                                    return (
+                                            <MapView.Marker
+                                                key={index}
+                                                coordinate={{longitude: space.longitude, latitude: space.latitude}}
+                                                title={myNote}
+                                                // description={"Headed"}
+                                                onPress={() => this.onPressSpace(space)}
+                                                anchor={{x: 0.5, y: 0.5}}   // This puts the Android image in center.
+                                            >
+                                                <Image style={[styles.imageContainer,
+                                                    {width: space.width, height: space.height, resizeMode: 'contain'}]}
+                                                />
+                                                <View style={[styles.overlay, {backgroundColor: space.bgColor}]}/>
+                                                <View style={styles.rectText}>
+                                                    <Text style={{
+                                                        color: space.fColor,
+                                                        fontWeight: 'bold',
+                                                        fontSize: space.fSize
+                                                    }}>{space.minsRemaining}</Text>
+                                                </View>
+                                            </MapView.Marker>
+                                )
+                            })}
                             {this.state.bDisplayParkedIcon && myfuncs.isLocationValid(this.state.parkedLocation) &&
                                 <MapView.Marker
                                     draggable

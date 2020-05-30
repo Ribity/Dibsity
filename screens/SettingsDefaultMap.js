@@ -49,7 +49,7 @@ class SettingsDefaultMapScreen extends React.Component {
             settings: {...this.props.settings}
         };
     }
-    onSubmitPress = () => {
+    onSubmitPress = async () => {
         let resetMap = false;
 
         try {
@@ -103,7 +103,7 @@ class SettingsDefaultMapScreen extends React.Component {
                 this.props.setRefreshMap(true);
                 this.props.setPannedMap(false);
             }
-            this.props.updateSettings( {...this.props.settings, ...this.state.settings} );
+            await this.props.updateSettings( {...this.props.settings, ...this.state.settings} );
             this.updateStorage();
             this.refs.toast.show("Updated Successfully", 2000);
 

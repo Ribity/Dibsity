@@ -66,15 +66,13 @@ class SettingsCommunalScreen extends React.Component {
 
             if (bOneDefined === false && this.props.settings.postCommunal === true) {
                 new_settings.postCommunal = false;
-                Alert.alert("Your Communal Id list is empty. Your departures will not be communal-only. " +
-                    "Your departures will be posted to ALL Dibsity users",
+                Alert.alert("Your Communal Id list is empty. Your departures will be posted to ALL Dibsity users",
                     "When arriving, you'll see ONLY soon-to-be-available 'public' spaces");
             }
             if (bOneDefined === true && this.props.settings.postCommunal === false) {
                 new_settings.postCommunal = true;
-                Alert.alert("Your departures will be posted ONLY to users that list at least one of your private Communal Ids. " +
-                    "Your departures will NOT be posted to everyone", "When arriving, " +
-                    "you will see soon-to-be-available 'public' spaces plus soon-to-be-available spaces of your fellow communal users");
+                Alert.alert("Your departures will be posted ONLY to users that list at least one of your private Communal Ids. ",
+                    "When arriving, you will see soon-to-be-available 'public' spaces plus spaces of your fellow communal users");
             }
             await this.props.updateSettings( {...this.props.settings, ...new_settings} );
             this.updateStorage();

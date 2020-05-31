@@ -262,7 +262,6 @@ class myFuncs  {
             } else {
                 rcd.communalIds = null;
             }
-
             let geocollection = geofirestore.collection(ApiKeys.firebase_collection).
                     doc(myfuncs.getCollectionName(0)).collection(tenMins.toString());
             if (setOrUpdateOrPrevious === 1) {

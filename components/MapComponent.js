@@ -115,7 +115,6 @@ class MapComponent extends React.Component {
                 this.setState({bDisplayParkedIcon: true});
             else
                 this.setState({bDisplayParkedIcon: false});
-
         } catch (error) {
             myfuncs.myRepo(error);
         }
@@ -453,22 +452,33 @@ class MapComponent extends React.Component {
         if (this.props.settings.dynamic_icons === false) {
             addition = 9;
         }
+        if (this.props.settings.large_icons === false) {
+            addition /= 3;
+        }
+        if (addition > 9)   // if not a tiny icon, shift numeral up just a bit.
+            spaceRcd.top = -3;
+        else
+            spaceRcd.top = -1;
         spaceRcd.fSize = base+addition;
         spaceRcd.width = base+addition;
         spaceRcd.height = base+addition;
     };
     calcRemainingMinutes = (secsDeparting, rcdMins) => {
         let mySecs = new Date().getTime() / 1000;
-        mySecs = Math.trunc(mySecs);
+        // mySecs = Math.trunc(mySecs);
+        secsDeparting = Math.trunc(secsDeparting);
         let minsRemaining = ((secsDeparting - mySecs) / 60) + 1;
 
         // console.log("departingSec:", secsDeparting);
         // console.log("nowSec:", mySecs);
 
-        // console.log("rcdMins:", rcdMins);
-        if (minsRemaining > rcdMins)    // This prevents a potential quick display of mins that is greater than what user entered.
-            minsRemaining = rcdMins;
-
+        console.log("rcdMins:", rcdMins, " minsRemaininbg:", minsRemaining);
+        // if (minsRemaining > rcdMins) {   // This prevents a potential quick display of mins that is greater than what user entered.
+        //     minsRemaining = rcdMins;
+            // console.log("Minus one");
+        // }
+        if (minsRemaining === 10)
+            minsRemaining = 9;
         return(Math.trunc(minsRemaining));
     };
     addSpace = (devId, rcd, idx) => {
@@ -477,9 +487,11 @@ class MapComponent extends React.Component {
             let bAddIt = true;
             let bModified = false;
             let secsDeparting = rcd.dateTime.seconds + rcd.departingMinutes*60;
+            // secsDeparting = Math.trunc(secsDeparting);
             let minsRemaining = this.calcRemainingMinutes(secsDeparting, rcd.departingMinutes);
             // console.log("minsRemaining:", minsRemaining);
-            console.log("addSpace Listener", idx, ":RCD:", rcd);
+            if (MyDefines.log_details)
+                console.log("addSpace Listener", idx, ":RCD:", rcd);
             // console.log("addSpace Listener", idx, ":ID:", devId);
             // console.log("addSpace Listener", idx, ":TEN", this.listenerTenMinutes[idx]);
 
@@ -793,13 +805,15 @@ class MapComponent extends React.Component {
         // console.log("Old:", this.props.parkedLocation);
 
         let distance = myfuncs.calcDistance(newCoord.coords, this.props.parkedLocation.coords);
-        console.log("Moved it ", distance, " meters");
+        if (MyDefines.log_details)
+            console.log("Moved it ", distance, " meters");
         if (distance > 3) {
-            Alert.alert("Save your new parked location?",null,
-                [
-                    {text: 'Cancel', onPress: () => {this.refreshParkedIcon()} },
-                    {text: 'Yes', onPress: () => {this.props.onSaveParkedLocation(newCoord)}},
-                ]);
+            this.props.showParkDialog(true, newCoord);
+            // Alert.alert("Save your new parked location?",null,
+            //     [
+            //         {text: 'Cancel', onPress: () => {this.refreshParkedIcon()} },
+            //         {text: 'Yes', onPress: () => {this.props.onSaveParkedLocation(newCoord)}},
+            //     ]);
         } else {
             this.refreshParkedIcon();
         }
@@ -991,7 +1005,7 @@ class MapComponent extends React.Component {
                                                     {width: space.width, height: space.height, resizeMode: 'contain'}]}
                                                 />
                                                 <View style={[styles.overlay, {backgroundColor: space.bgColor}]}/>
-                                                <View style={styles.rectText}>
+                                                <View style={[styles.rectText, {top: space.top}]}>
                                                     <Text style={{
                                                         color: space.fColor,
                                                         fontWeight: 'bold',

@@ -90,6 +90,14 @@ class SettingsScreen extends React.Component {
                         />
                         <SettingsList.Item
                             hasSwitch={true}
+                            switchState={this.state.settings.large_icons}
+                            switchOnValueChange={(bEvent) => this.updateSettings({large_icons: bEvent})}
+                            hasNavArrow={false}
+                            title='Large Icon Sizes'
+                            titleStyle={{fontSize:20}}
+                        />
+                        <SettingsList.Item
+                            hasSwitch={true}
                             switchState={this.state.settings.postCommunal}
                             switchOnValueChange={(bEvent) => this.updateSettings({postCommunal: bEvent})}
                             hasNavArrow={false}

@@ -2,7 +2,8 @@ import React from 'react';
 import {Alert, StyleSheet, View, Dimensions, Image, Text, TouchableOpacity, Platform, TextInput} from 'react-native';
 import MapComponent from '../components/MapComponent';
 
-import Dialog from "react-native-dialog";
+import DialogInput from "react-native-dialog-input";
+
 import Toast from 'react-native-easy-toast';
 import MyDefines from '../constants/MyDefines';
 import myStyles from "../myStyles";
@@ -38,6 +39,8 @@ import {setRefreshMap} from "../actions/TasksActions";
 let willUnmount = false;
 let myfirestore = null;
 let mapScreenSpaces = [];
+let myTitle = "";
+let movedParkedLoc = null;
 
 const {height, width} = Dimensions.get('window');
 const initialState = {
@@ -47,7 +50,7 @@ const initialState = {
     isAuthenticated: false,
     bUserSavedParkingLocation: false,
     refresh_map: false,
-    dialogVisible: false,
+    dialogInputVisible: false,
     note: "",
 };
 
@@ -235,36 +238,43 @@ class MapScreen extends React.Component {
         try {
             myfuncs.myBreadCrumbs('parkedLocation', this.props.navigation.state.routeName);
             // console.log("user clicked save parking location");
-            this.showDialog();
+            this.showDialog(false, null);
         } catch (error) {
             myfuncs.myRepo(error);
         }
     };
-    showDialog = () => {
-        this.setState({note: ""});
-        this.setState({ dialogVisible: true });
+    showDialog = (bUseMovedLoc, movedLoc) => {
+        // this.setState({note: ""});
+        if (bUseMovedLoc){
+            myTitle = "Is this the exact location where your vehicle is parked?";
+            movedParkedLoc = movedLoc;
+        } else {
+            myTitle = "Are you at the exact location where your vehicle is parked?";
+            movedParkedLoc = null;
+        }
+
+        this.setState({ dialogInputVisible: true });
     };
     handleCancel = () => {
-        this.setState({ dialogVisible: false });
+        this.setState({ dialogInputVisible: false });
     };
-    handleYes = () => {
-        this.setState({ dialogVisible: false });
-        this.saveParkedLocation(this.props.location);
+    handleDialogInput = async (text) => {
+        this.setState({ dialogInputVisible: false });
+        await this.setState({note: text});
+        this.saveParkedLocation(false);
     };
-    updateNoteState = (text) => {
-        this.setState({note: text});
-    };
-    saveParkedLocation = (newLocation) => {
+    saveParkedLocation = (bClearIt) => {
         try {
             myfuncs.myBreadCrumbs('saveParkedLocation', this.props.navigation.state.routeName);
-            if (newLocation === 0) {
+            if (bClearIt === 0) {
                 console.log("Clearing parked location");
                 this.saveParkedLocationToStorage({});
                 this.setState({bUserSavedParkingLocation: false});
                 this.refs.toast.show("Parking Location Cleared", 3000);
                 this.refs.toastCenter.show("Parking Location Cleared", 3000);
             } else {
-                console.log("Saving park location");
+                if (MyDefines.log_details)
+                    console.log("Saving park location");
 
                 if (MyDefines.fakeParkedLocation === true) {
                     if (Platform.OS === 'android') {
@@ -274,7 +284,10 @@ class MapScreen extends React.Component {
                         this.saveParkedLocationToStorage(MyDefines.fake_parked_location);
                     }
                 } else {
-                    this.saveParkedLocationToStorage(newLocation);
+                    if (movedParkedLoc === null)
+                        this.saveParkedLocationToStorage(this.props.location);
+                    else
+                        this.saveParkedLocationToStorage(movedParkedLoc);
                 }
                 this.setState({bUserSavedParkingLocation: true});
                 this.refs.toast.show("Parking Location Saved", 3000);
@@ -333,6 +346,7 @@ class MapScreen extends React.Component {
                                       onSaveParkedLocation={this.saveParkedLocation}
                                       onDepartingShortly={this.onDepartingShortlyPress}
                                       parentSpaces={this.mySpaces}
+                                      showParkDialog={this.showDialog}
                         />
                         }
                         {(this.state.readyToGo === true && this.state.refresh_map === false) &&
@@ -341,28 +355,24 @@ class MapScreen extends React.Component {
                         {(this.state.readyToGo === true &&
                             this.state.refresh_map === false &&
                             this.state.bUserSavedParkingLocation) &&
-                        <DepartParkedIcon onPress={this.onDepartingShortlyPress} />
+                        <DepartParkedIcon
+                            onPress={this.onDepartingShortlyPress}
+                            bCommunals={this.props.settings.postCommunal}
+                        />
                         }
 
                        {this.state.welcomeTheUser === true &&
                        <Text style={styles.WelcomeUser}>Welcome</Text>
                        }
-                    <Dialog.Container visible={this.state.dialogVisible}>
-                        <Dialog.Title>
-                            Are you at the exact location where your vehicle is parked?
-                        </Dialog.Title>
-                        <Dialog.Description>
-                            If not, please remember to save your location the next time you park
-                        </Dialog.Description>
-                        <Dialog.Input label={"Additional Info (Garage Level, Fees, etc):"}
-                                      value={this.state.note}
-                                      onChangeText={(text) => this.updateNoteState(text)}
-                        >
-                        </Dialog.Input>
-                        <Dialog.Button label="Cancel" onPress={this.handleCancel} />
-                        <Dialog.Button label="Yes" onPress={this.handleYes} />
-                    </Dialog.Container>
-
+                    <DialogInput isDialogVisible={this.state.dialogInputVisible}
+                                 title={myTitle}
+                                 // title={"Are you at the exact location where your vehicle is parked?"}
+                                 message={"Optional Additional Info:"}
+                                 hintInput ={"Ground level"}
+                                 dialogStyle={{marginTop:-300}}
+                                 submitInput={ (text) => {this.handleDialogInput(text)} }
+                                 closeDialog={() => {this.handleCancel()}}>
+                    </DialogInput>
                        <Toast
                            ref="toast"
                            style={{backgroundColor:'gold',borderRadius: 20,padding: 10}}

@@ -13,7 +13,7 @@ export default {
     fakeSeconds: 3,
 
     console_log_breadcrumbs: false,
-    myRepo_logging: false,
+    myRepo_logging: true,
 
     myStatusBarHeight: Constants.statusBarHeight,
     myBottomTabBarHeight: 45,
@@ -25,6 +25,7 @@ export default {
         keep_awake: true,
         confirmation_popups: true,
         dynamic_icons: true,
+        large_icons: true,
         postCommunal: false,
 
         refocus_seconds: 8,

@@ -7,9 +7,9 @@ export const DepartParkedIcon = ({onPress, bCommunals} ) => {
         myfuncs.myBreadCrumbs('DepartParkedIcon', 'DepartParkedIcon');
         let myText = "";
         if (bCommunals === true)
-            myText = "Post my departure time to Communals";
+            myText = "Post departure to Communals";
         else
-            myText = "Post my departure time to all users";
+            myText = "Post departure to all users";
 
         return (
             <TouchableOpacity style={styles.floatingParkedIcon}

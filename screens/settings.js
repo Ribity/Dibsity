@@ -8,9 +8,11 @@ import {MyHelpModal} from "../components/MyHelpModal";
 import {connect} from "react-redux";
 import {bindActionCreators} from "redux";
 import {updateSettings} from "../actions/settingsActions";
+import {setRecalculateSpaces} from "../actions/TasksActions";
 import {ScreenTitle} from "../components/screenTitle";
 import {MyButton} from "../components/MyButton";
 import SettingsList from 'react-native-settings-list';
+import {MyTouchableLogo} from "../components/MyTouchableLogo";
 
 const {height, width} = Dimensions.get('window');
 
@@ -20,11 +22,12 @@ class SettingsScreen extends React.Component {
         try {
             myfuncs.myBreadCrumbs('navigationOptions', 'SettingsScreen');
             return {
-                headerLeft: () => <MyButton onPress={() => navigation.navigate("About")}
+                headerLeft: () => <MyTouchableLogo onPress={() => navigation.navigate("TutorialSettings")}/>,
+                headerTitle: () => <ScreenTitle title={"Settings"} privacy={() => navigation.navigate("PrivacySettings")}/>,
+                headerRight: () => <MyButton onPress={() => navigation.navigate("About")}
                                             title={"About"}
                                             buttonStyle={null}
                                             textStyle={null} />,
-                headerTitle: () => <ScreenTitle title={"Settings"} privacy={() => navigation.navigate("PrivacySettings")}/>,
             };
         } catch (error) {
             myfuncs.myRepo(error);
@@ -110,7 +113,7 @@ class SettingsScreen extends React.Component {
                             titleInfo='List of Ids'
                             titleInfoStyle={styles.titleInfoStyle}
                             titleStyle={{fontSize:20}}
-                            onPress={() => this.props.navigation.navigate("SettingsCommunal")}
+                            onPress={() => this.props.navigation.navigate("Communals")}
                         />
 
                         <SettingsList.Item
@@ -173,6 +176,9 @@ class SettingsScreen extends React.Component {
             if (new_prop.keep_awake !== undefined) {
                 myfuncs.setAwakeorNot(new_prop.keep_awake);
             }
+            if (new_prop.dynamic_icons !== undefined || new_prop.large_icons !== undefined) {
+                this.props.setRecalculateSpaces(true);
+            }
         } catch (error) {
             console.log(error);
             myfuncs.myRepo(error);
@@ -216,6 +222,7 @@ const mapStateToProps = (state) => {
 };
 const mapDispatchToProps = dispatch => (
     bindActionCreators({
+        setRecalculateSpaces,
         updateSettings,
     }, dispatch)
 );

@@ -45,73 +45,69 @@ export const DepartingShortlyModal = ({isVisible, onExitPress, settings, onMinut
 
                         <View style={{paddingTop: 15}}/>
 
-                        <MyButton buttonStyle={styles.modalButton}
-                                  textStyle={styles.minutesButtonText}
-                                  onPress={() => onMinutesPressed(1)}
-                                  title={"1 minute"}/>
-
-                        <View style={{paddingTop: padBetween}}/>
-                        
-                        <MyButton buttonStyle={styles.modalButton}
-                                  textStyle={styles.minutesButtonText}
-                                  onPress={() => onMinutesPressed(2)}
-                                  title={"2 minutes"}/>
-                        
-                        <View style={{paddingTop: padBetween}}/>
-                        
-                        <MyButton buttonStyle={styles.modalButton}
-                                  textStyle={styles.minutesButtonText}
-                                  onPress={() => onMinutesPressed(3)}
-                                  title={"3 minutes"}/>
+                        <View style={styles.addRow}>
+                            <MyButton buttonStyle={styles.modalButton}
+                                      textStyle={styles.minutesButtonText}
+                                      onPress={() => onMinutesPressed(1)}
+                                      title={"1 minute"}/>
+                            <MyButton buttonStyle={styles.modalButton}
+                                      textStyle={styles.minutesButtonText}
+                                      onPress={() => onMinutesPressed(2)}
+                                      title={"2 minutes"}/>
+                        </View>
 
                         <View style={{paddingTop: padBetween}}/>
 
-                        <MyButton buttonStyle={styles.modalButton}
-                                  textStyle={styles.minutesButtonText}
-                                  onPress={() => onMinutesPressed(4)}
-                                  title={"4 minutes"}/>
+                        <View style={styles.addRow}>
+                            <MyButton buttonStyle={styles.modalButton}
+                                      textStyle={styles.minutesButtonText}
+                                      onPress={() => onMinutesPressed(3)}
+                                      title={"3 minutes"}/>
+
+                            <MyButton buttonStyle={styles.modalButton}
+                                      textStyle={styles.minutesButtonText}
+                                      onPress={() => onMinutesPressed(4)}
+                                      title={"4 minutes"}/>
+                        </View>
 
                         <View style={{paddingTop: padBetween}}/>
 
-                        <MyButton buttonStyle={styles.modalButton}
-                                  textStyle={styles.minutesButtonText}
-                                  onPress={() => onMinutesPressed(5)}
-                                  title={"5 minutes"}/>
-
-                        <View style={{paddingTop: padBetween}}/>
-
-                        <MyButton buttonStyle={styles.modalButton}
-                                  textStyle={styles.minutesButtonText}
-                                  onPress={() => onMinutesPressed(6)}
-                                  title={"6 minutes"}/>
+                        <View style={styles.addRow}>
+                            <MyButton buttonStyle={styles.modalButton}
+                                      textStyle={styles.minutesButtonText}
+                                      onPress={() => onMinutesPressed(5)}
+                                      title={"5 minutes"}/>
+                            <MyButton buttonStyle={styles.modalButton}
+                                      textStyle={styles.minutesButtonText}
+                                      onPress={() => onMinutesPressed(6)}
+                                      title={"6 minutes"}/>
+                        </View>
                         
                         <View style={{paddingTop: padBetween}}/>
 
-                        <MyButton buttonStyle={styles.modalButton}
-                                  textStyle={styles.minutesButtonText}
-                                  onPress={() => onMinutesPressed(7)}
-                                  title={"7 minutes"}/>
+                        <View style={styles.addRow}>
+                            <MyButton buttonStyle={styles.modalButton}
+                                      textStyle={styles.minutesButtonText}
+                                      onPress={() => onMinutesPressed(7)}
+                                      title={"7 minutes"}/>
+                            <MyButton buttonStyle={styles.modalButton}
+                                      textStyle={styles.minutesButtonText}
+                                      onPress={() => onMinutesPressed(8)}
+                                      title={"8 minutes"}/>
+                        </View>
                         
                         <View style={{paddingTop: padBetween}}/>
 
-                        <MyButton buttonStyle={styles.modalButton}
-                                  textStyle={styles.minutesButtonText}
-                                  onPress={() => onMinutesPressed(8)}
-                                  title={"8 minutes"}/>
-                        
-                        <View style={{paddingTop: padBetween}}/>
-
-                        <MyButton buttonStyle={styles.modalButton}
-                                  textStyle={styles.minutesButtonText}
-                                  onPress={() => onMinutesPressed(9)}
-                                  title={"9 minutes"}/>
-
-                        <View style={{paddingTop: padBetween+10}}/>
-
-                        <MyButton buttonStyle={styles.modalButton}
-                                  textStyle={styles.minutesButtonText}
-                                  onPress={onExitPress}
-                                  title={"Just go Back to Map"}/>
+                        <View style={styles.addRow}>
+                            <MyButton buttonStyle={styles.modalButton}
+                                      textStyle={styles.minutesButtonText}
+                                      onPress={() => onMinutesPressed(9)}
+                                      title={"9 minutes"}/>
+                            <MyButton buttonStyle={styles.modalButton}
+                                      textStyle={styles.minutesButtonText}
+                                      onPress={onExitPress}
+                                      title={"Back to Map"}/>
+                        </View>
 
                         <View style={{paddingTop: padBetween}}/>
 
@@ -154,5 +150,8 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         alignSelf: 'center',
     },
-
+    addRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+    },
 });

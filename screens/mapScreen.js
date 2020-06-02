@@ -19,7 +19,7 @@ import {MyHelpIcon} from "../components/MyHelpIcon";
 import {MyHelpModal} from "../components/MyHelpModal";
 import {DepartingShortlyModal} from "../components/DepartingShortlyModal";
 
-import {LogoComponent} from "../components/LogoComponent";
+import {MyTouchableLogo} from "../components/MyTouchableLogo";
 import {ScreenTitle} from "../components/screenTitle";
 import ApiKeys from "../constants/ApiKeys";
 
@@ -60,14 +60,13 @@ class MapScreen extends React.Component {
             myfuncs.myBreadCrumbs('navigationOptions', 'MapScreen');
             const { params = {} } = navigation.state;
             return {
-                headerLeft: () => <LogoComponent/>,
+                headerLeft: () => <MyTouchableLogo onPress={() => navigation.navigate("TutorialMap")}/>,
                 headerTitle: () => <ScreenTitle title={"Dibsity"} privacy={() => navigation.navigate("PrivacyMap")}/>,
             };
         } catch (error) {
             myfuncs.myRepo(error);
         }
     };
-
     constructor(props) {
         super(props);
         this.state = initialState;
@@ -257,6 +256,11 @@ class MapScreen extends React.Component {
     };
     handleCancel = () => {
         this.setState({ dialogInputVisible: false });
+
+        let tLocation = {...this.props.parkedLocation};
+        tLocation.coords.latitude += 0.00000000001;
+        this.props.updateParkedLocation(tLocation);
+        movedParkedLoc = null;
     };
     handleDialogInput = async (text) => {
         this.setState({ dialogInputVisible: false });
@@ -284,10 +288,11 @@ class MapScreen extends React.Component {
                         this.saveParkedLocationToStorage(MyDefines.fake_parked_location);
                     }
                 } else {
-                    if (movedParkedLoc === null)
+                    if (movedParkedLoc === null) {
                         this.saveParkedLocationToStorage(this.props.location);
-                    else
+                    } else {
                         this.saveParkedLocationToStorage(movedParkedLoc);
+                    }
                 }
                 this.setState({bUserSavedParkingLocation: true});
                 this.refs.toast.show("Parking Location Saved", 3000);
@@ -431,7 +436,7 @@ class MapScreen extends React.Component {
             myfuncs.myBreadCrumbs('onDepartingShortlyPress', this.props.navigation.state.routeName);
             if (this.props.vehicle.description.length < 1) {
                 Alert.alert("Please set your vehicle's desciption to assist others in finding your space", null);
-                this.props.navigation.navigate("myVehicle");
+                this.props.navigation.navigate("Vehicle");
                 return;
             }
             this.setState({isDepartingShortlyModalVisible: true});
@@ -482,9 +487,15 @@ class MapScreen extends React.Component {
             if (bUpdate === true)
                 setOrUpdateOrPrevious = 1;
 
-            myfuncs.addFirestoreDepartingRcd(this.props.parkedLocation.coords, this.state.note, this.props.vehicle,
-                thisTenMins, minutes, setOrUpdateOrPrevious, prevDibs, prevDibsDevId, this.props.settings);
+            if (myfuncs.isLocationValid(this.props.parkedLocation))
+                myfuncs.addFirestoreDepartingRcd(this.props.parkedLocation.coords, this.state.note, this.props.vehicle,
+                    thisTenMins, minutes, setOrUpdateOrPrevious, prevDibs, prevDibsDevId, this.props.settings);
+            else {
+                    // setTimeout is needed because in iOS when closing a modal, it also closes the Alert.
+                setTimeout( () => Alert.alert("Your departure was NOT posted to others", "Your previously saved Parked Location is invalid"), 1000);
+            }
         } catch (error) {
+            console.log(error);
             myfuncs.myRepo(error);
         }
     };

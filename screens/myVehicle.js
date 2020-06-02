@@ -22,6 +22,7 @@ import {ScreenTitle} from "../components/screenTitle";
 import MyDefines from "../constants/MyDefines";
 import {bindActionCreators} from "redux";
 import {updateVehicle} from "../actions/vehicleActions";
+import {MyTouchableLogo} from "../components/MyTouchableLogo";
 
 TextInput.defaultProps = TextInput.defaultProps || {};
 TextInput.defaultProps.allowFontScaling = false;
@@ -32,6 +33,7 @@ class MyVehicleScreen extends React.Component {
             myfuncs.myBreadCrumbs('navigationOptions', 'AudioScreen');
             const { params = {} } = navigation.state;
             return {
+                headerLeft: () => <MyTouchableLogo onPress={() => navigation.navigate("TutorialVehicle")}/>,
                 headerTitle: () => <ScreenTitle title={"My Vehicle"}/>,
             };
         } catch (error) {
@@ -64,7 +66,7 @@ class MyVehicleScreen extends React.Component {
                     "First character cannot be a space");
                 return;
             }
-            if (myVehicle.description.length < 7) {
+            if (myVehicle.description.length > 0 && myVehicle.description.length < 7) {
                 Alert.alert("Error with input for Description of your vehicle",
                     "Must be at least 7 characters");
                 return;
@@ -105,13 +107,6 @@ class MyVehicleScreen extends React.Component {
 
                         <View style={{marginTop: 20}}/>
 
-                        <MyButton buttonStyle={myStyles.selectButton}
-                                  textStyle={myStyles.selectButtonText}
-                                  onPress={() => this.onSubmitPress(false)}
-                                  title={"Save"}/>
-
-
-
                         <Text style={myStyles.iFieldLabel}>Short description of your vehicle:</Text>
                         <TextInput style={myStyles.iField}
                                    value={this.state.vehicle.description}
@@ -143,7 +138,7 @@ class MyVehicleScreen extends React.Component {
                         <MyButton buttonStyle={myStyles.selectButton}
                                   textStyle={myStyles.selectButtonText}
                                   onPress={() => this.onSubmitPress(false)}
-                                  title={"Save"}/>
+                                  title={"Submit"}/>
 
                         <Toast
                         ref="toast"

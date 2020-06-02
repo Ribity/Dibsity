@@ -50,9 +50,10 @@ export default {
 
     default_tasks: {
         refresh_map: false,
+        recalculate_spaces: false,
         panned_map: false,
         panned_coords: {},
-        firestore_radius_meters: 3000,
+        firestore_radius_meters: 6000,
     },
     default_location: {
         "coords": {

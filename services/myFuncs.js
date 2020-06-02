@@ -262,6 +262,10 @@ class myFuncs  {
             } else {
                 rcd.communalIds = null;
             }
+            if (departingMinutes === -1) {  // If user is canceling, clear dibs in case user post a new departure time
+                rcd.dibs = false;
+                rcd.dibsDevId = 0;
+            }
             let geocollection = geofirestore.collection(ApiKeys.firebase_collection).
                     doc(myfuncs.getCollectionName(0)).collection(tenMins.toString());
             if (setOrUpdateOrPrevious === 1) {

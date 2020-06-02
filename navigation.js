@@ -8,6 +8,7 @@ import MyDefines from './constants/MyDefines';
 
 import MapScreen  from './screens/mapScreen';
 import PrivacyScreen from './screens/PrivacyScreen';
+import TutorialScreen from './screens/tutorialScreen';
 import MyVehicleScreen from './screens/myVehicle';
 import SettingsScreen from './screens/settings';
 import SettingsDefaultMapScreen from './screens/SettingsDefaultMap';
@@ -23,21 +24,24 @@ let defNav = {
 
 const MapStack = createStackNavigator({
         Map: MapScreen,
+        TutorialMap: TutorialScreen,
         PrivacyMap: PrivacyScreen,
     },
     {defaultNavigationOptions: () => (defNav)});
 
 const MyVehicleStack = createStackNavigator({
-        myVehicle: MyVehicleScreen,
+        Vehicle: MyVehicleScreen,
+        TutorialVehicle: TutorialScreen,
     },
     {defaultNavigationOptions: () => (defNav)});
 
 const SettingsStack = createStackNavigator({
     Settings: SettingsScreen,
     PrivacySettings: PrivacyScreen,
+    TutorialSettings: TutorialScreen,
     About: AboutScreen,
     SettingsDefaultMap: SettingsDefaultMapScreen,
-    SettingsCommunal: SettingsCommunalScreen,
+    Communals: SettingsCommunalScreen,
 }, {defaultNavigationOptions: () => (defNav)});
 
 MapStack.navigationOptions = {

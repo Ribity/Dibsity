@@ -20,7 +20,7 @@ import _ from 'lodash'
 import myStyles from "../myStyles";
 import ApiKeys from "../constants/ApiKeys";
 import {updateParkedLocation} from "../actions/ParkedLocationActions";
-import {setPannedMap} from "../actions/TasksActions";
+import {setPannedMap, setRecalculateSpaces} from "../actions/TasksActions";
 
 const GEOLOCATION_OPTIONS = { accuracy: Location.Accuracy.Highest, interval: 1000, enableHighAccuracy: true};
 
@@ -370,6 +370,7 @@ class MapComponent extends React.Component {
     }
     recalculate_spaces = async () => {
         let bModified = false;
+        let bRefresh = false;
         let tSpaces = [...this.state.spaces];
         let minsRemaining;
         let bMakeIconOpaque = false;
@@ -379,10 +380,15 @@ class MapComponent extends React.Component {
         else
             bDisplayParkedIcon = false;
 
+        if (this.props.tasks.recalculate_spaces === true) {
+            bRefresh = true;
+            this.props.setRecalculateSpaces(false);
+        }
+
         for (let i=tSpaces.length-1; i>=0; i--) {
             minsRemaining = this.calcRemainingMinutes(tSpaces[i].secsDeparting, 9999);
             if (minsRemaining >= 0) {
-                if (minsRemaining !== tSpaces[i].minsRemaining) {
+                if (minsRemaining !== tSpaces[i].minsRemaining || bRefresh) {
                     tSpaces[i].minsRemaining = minsRemaining;
                     this.setMinutesRemainingIcon(tSpaces[i]);
                     bModified = true;
@@ -451,9 +457,14 @@ class MapComponent extends React.Component {
 
         if (this.props.settings.dynamic_icons === false) {
             addition = 9;
+            if (spaceRcd.dibsDevId === Constants.deviceId)
+                addition = 15;
         }
         if (this.props.settings.large_icons === false) {
-            addition /= 3;
+            if (spaceRcd.dibsDevId === Constants.deviceId)
+                addition /= 2;
+            else
+                addition /= 3;
         }
         if (addition > 9)   // if not a tiny icon, shift numeral up just a bit.
             spaceRcd.top = -3;
@@ -472,7 +483,7 @@ class MapComponent extends React.Component {
         // console.log("departingSec:", secsDeparting);
         // console.log("nowSec:", mySecs);
 
-        console.log("rcdMins:", rcdMins, " minsRemaininbg:", minsRemaining);
+        // console.log("rcdMins:", rcdMins, " minsRemaininbg:", minsRemaining);
         // if (minsRemaining > rcdMins) {   // This prevents a potential quick display of mins that is greater than what user entered.
         //     minsRemaining = rcdMins;
             // console.log("Minus one");
@@ -498,6 +509,10 @@ class MapComponent extends React.Component {
             // if (!myfuncs.isEmpty(rcd.timestamp)) {
             //     console.log("addSpace timeStamp true");
             // }
+            let bCanceling = false;
+            if (rcd.departingMinutes === -1)
+                bCanceling = true;
+
             let joined = [...this.state.spaces];
             let index = joined.findIndex(space => space.key === devId);
             if (index >= 0) {
@@ -505,15 +520,20 @@ class MapComponent extends React.Component {
                 if (joined[index].tenMinutes < this.listenerTenMinutes[idx] ) {
                     joined.splice(index, 1);
                     // console.log("delete previous devId space:");
-                    bAddIt = true;
                     bModified = true;
                 } else {
                     // console.log("keep previous devId space:");
+                    if (bCanceling === true) {
+                        joined.splice(index, 1);
+                        bModified = true;
+                    }
                     bAddIt = false;
                 }
             } else {
                 bAddIt = true;
             }
+            if (bCanceling === true)
+                bAddIt = false;
             if (bAddIt && minsRemaining >= 0) {
                 bModified = true;
                 let newSpace = {};
@@ -547,7 +567,7 @@ class MapComponent extends React.Component {
             myfuncs.myRepo(error);
         }
     };
-    removeSpace = (devId, idx) => {
+    removeSpace = async (devId, idx) => {
         try {
             myfuncs.myBreadCrumbs('removeSpace', this.props.navigation.state.routeName);
             // console.log("removeSpace Listener", idx, ":", this.listenerTenMinutes[idx]);
@@ -556,7 +576,7 @@ class MapComponent extends React.Component {
             let nextSpaces = this.state.spaces;
             nextSpaces.splice(index,1);
 
-            this.setState({spaces: nextSpaces})
+            await this.setState({spaces: nextSpaces})
             this.props.parentSpaces(nextSpaces);
         } catch (error) {
             myfuncs.myRepo(error);
@@ -788,7 +808,7 @@ class MapComponent extends React.Component {
         try {
             myfuncs.myBreadCrumbs('onPressMyParkingSpot', this.props.navigation.state.routeName);
 
-            Alert.alert("Current parked location","You also may drag the Park icon to a new location",
+            Alert.alert("Current parked location. ","You also may drag the Park icon to a new location",
                 [
                     {text: 'Ok'},
                     {text: 'Clear saved location', onPress: () => {this.props.onSaveParkedLocation(0)} },
@@ -923,7 +943,6 @@ class MapComponent extends React.Component {
             // console.log("parkedLocation:", this.state.parkedLocation);
             // console.log("rendSpaces:", this.state.spaces);
 
-
                 return (
 
                 this.state.locationResult === null ?
@@ -1015,27 +1034,26 @@ class MapComponent extends React.Component {
                                             </MapView.Marker>
                                 )
                             })}
-                            {this.state.bDisplayParkedIcon && myfuncs.isLocationValid(this.state.parkedLocation) &&
-                                <MapView.Marker
-                                    draggable
-                                    onDragEnd={this.onUserParkingDragged}
-                                    coordinate={{
-                                        longitude: this.state.parkedLocation.coords.longitude,
-                                        latitude: this.state.parkedLocation.coords.latitude
-                                    }}
-                                    title={"Current parked location"}
-                                    description={"You may drag the Parked icon to a new location"}
-                                    onPress={() => this.onPressMyParkingSpot()}
-                                    anchor={{x: 0.5, y: 0.5}}   // This puts the Android image in center.
-                                >
-                                    <Image source={parkIcon}
-                                           style={{
-                                               width: 20,
-                                               height: 20,
-                                               resizeMode: 'contain',
-                                           }}
-                                    />
-                                </MapView.Marker>
+                            {(this.state.bDisplayParkedIcon && myfuncs.isLocationValid(this.state.parkedLocation)) &&
+                            <MapView.Marker
+                                draggable
+                                onDragEnd={this.onUserParkingDragged}
+                                coordinate={{
+                                    longitude: this.state.parkedLocation.coords.longitude,
+                                    latitude: this.state.parkedLocation.coords.latitude
+                                }}
+                                title={"Current parked location"}
+                                description={"You may drag the Parked icon to a new location"}
+                                onPress={() => this.onPressMyParkingSpot()}
+                                anchor={{x: 0.5, y: 0.5}}   // This puts the Android image in center.
+                            >
+                                <Image source={parkIcon}
+                                       style={{
+                                           width: 20,
+                                           height: 20,
+                                       }}
+                                />
+                            </MapView.Marker>
                             }
                         </MapView>
 
@@ -1090,6 +1108,7 @@ const mapDispatchToProps = dispatch => (
         updateLocation,
         updateParkedLocation,
         setPannedMap,
+        setRecalculateSpaces,
     }, dispatch)
 );
 export default connect(mapStateToProps, mapDispatchToProps)(MapComponent);

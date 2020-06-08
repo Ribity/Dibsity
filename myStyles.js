@@ -6,17 +6,6 @@ const {height, width} = Dimensions.get('window');
 
 // Note, 'honeydew' is a nice light mediumseagreen. See search/leaps list. Claimed ribbons
 const myStyles = StyleSheet.create({
-    myHeaderTouch: {
-        // padding: 5,
-        //     backgroundColor: '#79c879',
-        backgroundColor: '#AFC0AB',
-        opacity: .7,
-        alignItems: 'center',
-        alignSelf: 'center',
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: 'gold',
-    },
     myHeaderText: {
         fontSize: 17,
         opacity: 1.0,
@@ -33,49 +22,7 @@ const myStyles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: MyDefines.myTabColor,
-        // paddingTop: 50,
-        // paddingBottom: 50,
-
     },
-    ribbonHeader: {
-        fontSize: 23,
-        fontWeight: 'bold',
-        color: 'green',
-    },
-    flatListPadding: {
-        paddingTop: MyDefines.myStatusBarHeight + 35,
-    },
-    flatListHeader: {
-        flexDirection: 'row',
-        // width: width,
-    },
-    flatListLeft: {
-        flex: 1,
-        justifyContent: 'flex-start',
-        paddingLeft: 20,
-    },
-    flatListRight: {
-        justifyContent: 'flex-end',
-        alignSelf: 'stretch',
-        paddingRight: 5,
-    },
-    smallButtonText: {
-        fontSize: 13,
-        opacity: 1.0,
-        color: 'darkblue',
-        padding: 1,
-        alignItems: 'center',
-    },
-    flatListHeaderText: {
-        fontSize: 13,
-        color: 'green',
-    },
-    // searchHeaderText: {
-    //     fontSize: 15,
-    //     color: 'mediumseagreen',
-    //     // opacity: 0.7,
-    //     alignItems: "left",
-    // },
     infoText: {
         fontSize: 17,
         color: 'green',
@@ -89,11 +36,6 @@ const myStyles = StyleSheet.create({
         paddingTop: 20,
         padding: 5,
     },
-    infoLargerText: {
-        fontSize: 23,
-        color: 'green',
-        textAlign: 'center',
-    },
     iFieldLabelNoTopMargin: {
         fontSize: 17,
         paddingLeft: 8,
@@ -104,20 +46,7 @@ const myStyles = StyleSheet.create({
     },
     iFieldLabel: {
         fontSize: 17,
-        // fontWeight: 'bold',
-        // opacity: .8,
         paddingLeft: 8,
-        textAlign: 'left',
-        alignSelf: 'stretch',
-        paddingTop: 15,
-        color: 'green',
-        fontWeight: 'bold',
-    },
-    iFieldLabelSmaller: {
-        fontSize: 15,
-        // fontWeight: 'bold',
-        // opacity: .8,
-        paddingLeft: 15,
         textAlign: 'left',
         alignSelf: 'stretch',
         paddingTop: 15,
@@ -176,11 +105,6 @@ const myStyles = StyleSheet.create({
     myText: {
         fontSize: 20,
     },
-    myBoldText: {
-        fontWeight:"bold",
-        fontSize: 20,
-    },
-
 });
 
 

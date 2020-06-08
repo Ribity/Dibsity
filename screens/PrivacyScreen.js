@@ -24,68 +24,62 @@ export default class PrivacyScreen extends React.Component {
         this.state = {};
     }
 
-    render() {
-        try {
-            myfuncs.myBreadCrumbs('render', this.props.navigation.state.routeName);
-            return (
-            <SafeAreaView style={myStyles.container}>
-                <View style={{flex: 1, alignItems: 'center'}}>
+render() {
+    try {
+        myfuncs.myBreadCrumbs('render', this.props.navigation.state.routeName);
+        return (
+        <SafeAreaView style={myStyles.container}>
+            <View style={{flex: 1, alignItems: 'center'}}>
 
-                    <View style={{padding: 20}}>
-                        <ScrollView
-                            contentContainerStyle={{
-                                flexGrow: 1,
-                                justifyContent: 'space-between'
-                            }}>
+                <View style={{padding: 20}}>
+                    <ScrollView
+                        contentContainerStyle={{
+                            flexGrow: 1,
+                            justifyContent: 'space-between'
+                        }}>
 
-                            <View>
-
-                            <Text style={styles.privacyText}>
-                                Dibsity values preserves your total privacy.
-                            </Text>
-                                <Text style={styles.privacyText}>
-                                    There is no sign-up or login-in.
-                                </Text>
-                            <Text style={styles.privacyText}>
-                                Dibsity does not collect or sell your personal data.
+                    <View>
+                        <Text  style={{fontSize: 22}}>
+                            <Text style={{fontWeight: "bold"}}>
+                                Your privacy is our focus
                             </Text>
 
-                            <Text style={styles.privacyText}>
-                                We will never ask for your EMail address or phone number.
-                                We provide Dibsity as a hobby.
+                            {"\n"}
+                            {"\n"}
+
+                            There is no sign-up or login-in.
+                            {"\n"}
+                            {"\n"}
+
+                            Dibsity does not collect or sell your personal data.
+                            {"\n"}
+                            {"\n"}
+
+                            We will not ask for your EMail address or phone number.
+                            We provide Dibsity as a hobby.
+                            {"\n"}
+                            {"\n"}
+
+                            We do not know who you are or how to contact you.
+                            When you download the the app, we are given an arbitrary device-Id for your device.
+                            We use your device-Id to save and reference your data in a
+                            cloud database. The privacy we give, however, prevents us from persisting/preserving
+                            your data when you use a different device or if you delete the Dibsity app and
+                            download again.  This was a tough decision for us,
+                            but we lean towards providing privacy.
+                            {"\n"}
+                            {"\n"}
                             </Text>
 
-                            <Text style={styles.privacyText}>
-                                We do not know who you are. When you download the the app, we are given
-                                an arbitrary device-Id for your device.
-                                We use your device-Id to save and reference your data in the
-                                cloud database. The privacy we give, however, prevents us from persisting/preserving
-                                your data when you use a different device or if you delete the Dibsity app and
-                                download again.  This was a tough decision for us,
-                                but we lean towards providing privacy.
-                            </Text>
-                            </View>
-                        </ScrollView>
                     </View>
+                    </ScrollView>
                 </View>
-            </SafeAreaView>
-            );
-        } catch (error) {
-            myfuncs.myRepo(error);
-        }
-    };
+            </View>
+        </SafeAreaView>
+        );
+    } catch (error) {
+        myfuncs.myRepo(error);
+    }
+};
 
 };
-const styles = StyleSheet.create({
-
-    privacyText: {
-        color: 'green',
-
-        fontSize: 20,
-        lineHeight: 22,
-
-        fontWeight: "bold",
-        paddingTop: 15
-    },
-
-});

@@ -10,16 +10,16 @@ const helpStyles = StyleSheet.create({
         marginTop: MyDefines.myStatusBarHeight + 30,
         marginBottom: MyDefines.myStatusBarHeight,
         justifyContent: 'flex-start',
-        alignItems: 'center',
+        // alignItems: 'center',
         backgroundColor: 'lightgrey',
         padding: 5,
     },
     helpBold: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: 'bold',
     },
     helpText: {
-        fontSize: 22,
+        fontSize: 18,
     },
 });
 

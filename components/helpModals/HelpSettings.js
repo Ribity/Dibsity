@@ -8,41 +8,58 @@ export const HelpSettings = ( {} ) => {
     try {
 	myfuncs.myBreadCrumbs('HelpSettings', 'HelpSettings');
 		return (<KeyboardAwareScrollView
-			// style={helpStyles.container}
 			resetScrollToCoords={{x:0, y:0}}
-			// contentContainerStyle={helpStyles.container}
 		>
 
 			<Text  style={helpStyles.helpText}>
-				<Text style={helpStyles.helpBold}>Settings: </Text>
-				When you modify a setting, you do not have to 'Save' it. It's automatically saved and
+				When you modify a setting on this screen, you do not have to 'Save' it. It's automatically saved and
 				persists.
 				{"\n"}
 				{"\n"}
 				Turning ON 'Keep Screen Awake' will override your device settings
-				and NOT go to sleep while the Kibity app is in the foreground on your screen.
-				We turn this ON by default to keep the stories playing and not
-				going to sleep.
+				and NOT go to sleep while the Dibsity app is in the foreground on your screen.
+				We turn this ON by default
 				{"\n"}
 				{"\n"}
-				By default, we play a 'Ribbit' sound after each story is told.
-				You may disable this if you like.  If you disable, we'll say 'The End' instead.
+				You may turn off confirmation pop-ups. Once you become an experienced user, you'll likely
+				turn this off.  'Off' eliminates several informational pop-ups, and therefore requires less
+				user interaction to reserve, save and post parking spots.
 				{"\n"}
 				{"\n"}
-				By default, we pause 1 second after each line is spoken. You may modify this if you like.
-				Note, for most toddler stories we pause additional seconds. You should see in the stories
-				list the specified additional pause for each specific toddler story.
+				By default, Icon sizes on the map are dynamic in size. As the scheduled departure for a
+				parking spot counts down, the icon becomes bigger.  One minute remaining presents the
+				largest icon. Turning this off, sets all icons to a fixed, equal size.
 				{"\n"}
 				{"\n"}
-				By default, we pause 3 seconds after each story. You may modify this for your liking.
-				{"\n"}
-				{"\n"}
-				The last two settings specify the pitch and speed of the voice for the stories. These
-				are mostly for fun.  Set them as you like.
-				{"\n"}
-				{"\n"}
-				If your device offers addtional voices, you'll see a 'Select Voice' button. Click
-				that to see a list of additional voices you can use.
+				Larger icons are displayed by default. You may turn this off to display smaller icons
+				on the map.
+                {"\n"}
+                {"\n"}
+                <Text  style={{fontWeight: 'bold'}}>
+                    'Communal Ids'
+                </Text>
+				<Text> </Text>
+				are used to post and view parkings spots that are specific to your private Communal groups.
+                {"\n"}
+                {"\n"}
+
+				<Text  style={{fontWeight: 'bold'}}>
+                    Communal example,
+                </Text>
+                <Text> </Text>
+
+                You live in an NYC aparment building with public parking surrounding
+                your building. However, those public spaces are overwhelmingly used by people that are
+                not part of your apartment communitity. Your apartment community decides to create and share a
+                Dibsity Communal Code that each of you enter into your Comunnal Id list.
+                Over time, with successful communal crowd-sourcing from all residents giving and claiming
+                dibs, the parking around your aparment building will become only people that are
+                Dibsity crowd sourcing in your communal group.
+
+                {"\n"}
+                {"\n"}
+				There are several specific map settings you may specify on a separate MapSettings screen.
+
 			   </Text>
 			</KeyboardAwareScrollView>
 		);

@@ -14,10 +14,15 @@ export const HelpMyVehicle = ({} ) => {
 		>
 
 			<Text  style={helpStyles.helpText}>
-				<Text style={helpStyles.helpBold}>Vehicle: </Text>
-				Vehicle Help Screen
+				Please specify any specifics that will assist other users when attempting to find
+				your vehcile.
 				{"\n"}
 				{"\n"}
+				For example, '2015 White Prius with tinted windows and a 13.1 sticker'
+				{"\n"}
+				{"\n"}
+				Also, the first two digits of your license plate will help other users confirm
+				your vehicle.
 
 			   </Text>
 			</KeyboardAwareScrollView>

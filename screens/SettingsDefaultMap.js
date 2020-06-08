@@ -35,7 +35,7 @@ class SettingsDefaultMapScreen extends React.Component {
             myfuncs.myBreadCrumbs('navigationOptions', 'SettingsDefaultMap');
 
             return {
-                headerTitle: () => <ScreenTitle title={"Map Settings"} privacy={() => navigation.navigate("PrivacySettings")}/>,
+                headerTitle: () => <ScreenTitle title={"Map Settings"}/>,
             };
 
         } catch (error) {

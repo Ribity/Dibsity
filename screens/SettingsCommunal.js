@@ -20,6 +20,7 @@ import {MyButton} from "../components/MyButton";
 import {bindActionCreators} from "redux";
 import {ScreenTitle} from "../components/screenTitle";
 import {updateSettings} from "../actions/settingsActions";
+import helpStyles from "../components/helpModals/helpStyles";
 
 const {height, width} = Dimensions.get('window');
 
@@ -94,10 +95,28 @@ class SettingsCommunalScreen extends React.Component {
                     keyboardShouldPersistTaps={'handled'}
                     contentContainerStyle={myStyles.container}
                 >
-                    <Text style={myStyles.infoTextTopMargin}>Each 'Communal ID' you enter will be used to
-                        identify your communities. Any Dibsity user that also has one of your IDs listed will
-                        see your posted departures when you post your departure</Text>
+                <Text  style={[helpStyles.helpText, {padding: 10}]}>
 
+                        Each 'Communal ID' you enter will be used to
+                        identify your communities. Only Dibsity users that also has one of your IDs listed will
+                        see your posted departures
+
+                        {"\n"}
+                        {"\n"}
+
+                        The Dibsity app does not create Communal Codes.  Each of your Communals will create their own specific code(s)
+                        to be shared amongst Communal members
+
+                        {"\n"}
+                        {"\n"}
+
+                        <Text  style={{fontWeight: 'bold'}}>
+                            Communal ID examples,
+                        </Text>
+                        <Text> </Text>
+                       'BayApts' or '1234321' or 'RRHS-81'. (Spaces not allowed)
+
+                    </Text>
 
                     <View style={{paddingTop: 15}}/>
 

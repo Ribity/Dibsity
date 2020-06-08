@@ -43,8 +43,11 @@ export default class AboutScreen extends React.Component {
 						}}>
 
 						<View>
+							<Text  style={{fontSize: 18}}>
 
-						<Text style={styles.aboutText}>
+
+
+
 							Welcome to Dibsity.
 							{"\n"}
 							{"\n"}

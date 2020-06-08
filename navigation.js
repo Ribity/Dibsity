@@ -8,7 +8,7 @@ import MyDefines from './constants/MyDefines';
 
 import MapScreen  from './screens/mapScreen';
 import PrivacyScreen from './screens/PrivacyScreen';
-import TutorialScreen from './screens/tutorialScreen';
+import TutorialScreenOld from './screens/tutorialScreen';
 import MyVehicleScreen from './screens/myVehicle';
 import SettingsScreen from './screens/settings';
 import SettingsDefaultMapScreen from './screens/SettingsDefaultMap';
@@ -24,21 +24,21 @@ let defNav = {
 
 const MapStack = createStackNavigator({
         Map: MapScreen,
-        TutorialMap: TutorialScreen,
+        TutorialMap: TutorialScreenOld,
         PrivacyMap: PrivacyScreen,
     },
     {defaultNavigationOptions: () => (defNav)});
 
 const MyVehicleStack = createStackNavigator({
         Vehicle: MyVehicleScreen,
-        TutorialVehicle: TutorialScreen,
+        TutorialVehicle: TutorialScreenOld,
     },
     {defaultNavigationOptions: () => (defNav)});
 
 const SettingsStack = createStackNavigator({
     Settings: SettingsScreen,
     PrivacySettings: PrivacyScreen,
-    TutorialSettings: TutorialScreen,
+    TutorialSettings: TutorialScreenOld,
     About: AboutScreen,
     SettingsDefaultMap: SettingsDefaultMapScreen,
     Communals: SettingsCommunalScreen,
@@ -74,9 +74,12 @@ const bottomTabNavigator = createBottomTabNavigator({
              const { routeName } = navigation.state;
              let iconName;
              if (routeName === 'MapStack') {
-                 iconName = focused
-                     ? 'ios-play'
-                     : 'ios-play-circle';
+                 iconName = 'ios-eye';
+                 // iconName = 'ios-move';
+                 // iconName = 'md-navigate';
+                 // iconName = focused
+                 //     ? 'md-map'
+                 //     : 'md-map';
              } else if (routeName === 'MyVehicleStack') {
                  iconName = 'ios-car';
              }  else if (routeName === 'SettingsStack') {

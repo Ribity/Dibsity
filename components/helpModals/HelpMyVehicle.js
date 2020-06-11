@@ -23,7 +23,9 @@ export const HelpMyVehicle = ({} ) => {
 				{"\n"}
 				Also, the first two digits of your license plate will help other users confirm
 				your vehicle.
-
+                {"\n"}
+                {"\n"}
+                Be sure to Submit to save your vehicle description
 			   </Text>
 			</KeyboardAwareScrollView>
 		);

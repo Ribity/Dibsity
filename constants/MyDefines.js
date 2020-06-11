@@ -8,11 +8,11 @@ export default {
     fakeLocation: false,    // Fakes location changes.
     fakeParkedLocation: false,
     oneMinuteIntervals: false,
-    disable_newUserSentry: true,
+    disable_newUserSentry: false,
+    console_log_breadcrumbs: false,
 
     fakeSeconds: 3,
 
-    console_log_breadcrumbs: false,
     myRepo_logging: true,
 
     myStatusBarHeight: Constants.statusBarHeight,

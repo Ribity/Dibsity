@@ -54,9 +54,17 @@ class myFuncs  {
             parkedLocation = await hardStorage.getKey("parkedLocation");
 
             // console.log("1st parkLoc from hardStorage:", parkedLocation);
+            // if (typeof parkedLocation.location !== "undefined") {
+            //     console.log("parkedLocation.location = undefined");
+            //     parkedLocation.coords = {...parkedLocation.location.coords};
+            //     delete parkedLocation.location;
+            // }
+
             if (parkedLocation === null || parkedLocation === 0 ||
+                (typeof parkedLocation.location === "undefined") ||
                 (typeof parkedLocation.location.coords === "undefined") )
-                parkedLocation.location = {};
+                parkedLocation = {};
+
             // console.log("2nd parkLoc from hardStorage:", parkedLocation);
 
             // console.log("init after");

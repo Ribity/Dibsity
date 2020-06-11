@@ -98,12 +98,12 @@ export default class TutorialScreen extends React.Component {
                                         Communal example:
                                             {"\n"}
                                         </Text>
-                                    You live in an NYC aparment building with public parking surrounding
+                                    You live in an NYC apartment building with public parking surrounding
                                     your building. However, those public spaces are overwhelmingly used by people that are
                                     not part of your apartment communitity. Your apartment community decides to share a
-                                    Dibsity Communal Code that each of you enter into your Comunnal Id list.
+                                    Dibsity Communal Code that each of you enter into your Communal Id list.
                                     Over time, with successful communal crowd-sourcing from all residents giving and claiming
-                                    dibs, the parking around your aparment building will become only people that are
+                                    dibs, the parking around your apartment building will become only people that are
                                     Dibsity crowd sourcing in your communal group.
                                 </Text>
 

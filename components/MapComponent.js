@@ -783,7 +783,7 @@ class MapComponent extends React.Component {
                 } else {
                     Alert.alert(space.vehicle + myNote, "Someone already reserved this spot");
                 }
-            } else if (distance < 25) {
+            } else if (distance < 35) {
                 Alert.alert(space.vehicle + myNote, "Activate your vehicle's turn signal, and reserve it ...",
                     [
                         {text: 'Cancel'},
@@ -794,7 +794,7 @@ class MapComponent extends React.Component {
                         },
                     ]);
             } else {
-                Alert.alert(space.vehicle + myNote, 'You must be within 25 meters to reserve this spot');
+                Alert.alert(space.vehicle + myNote, 'You must be within 35 meters to reserve this spot');
             }
         } catch (error) {
             myfuncs.myRepo(error);
@@ -839,10 +839,17 @@ class MapComponent extends React.Component {
         }
     };
     refreshParkedIcon = () => {
-        let tLocation = {...this.props.parkedLocation};
-        tLocation.coords.latitude += 0.00000000001;
-        this.props.updateParkedLocation(tLocation);
-        this.setState({parkedLocation: this.props.parkedLocation});
+        try {
+            myfuncs.myBreadCrumbs('refreshParkedIcon', this.props.navigation.state.routeName);
+            let tLocation = {...this.props.parkedLocation};
+            if (tLocation !== null && tLocation !== 0 && (typeof tLocation.coords !== "undefined") ) {
+                tLocation.coords.latitude += 0.00000000001; // This forces render to move icon back to original
+                this.props.updateParkedLocation(tLocation);
+                this.setState({parkedLocation: this.props.parkedLocation});
+            }
+        } catch (error) {
+            myfuncs.myRepo(error);
+        }
     };
     userPannedMap = () => {
         try {
@@ -851,7 +858,7 @@ class MapComponent extends React.Component {
 
             this.setUserPanned(true);
         } catch (error) {
-            myfuncs.mySentry(error);
+            myfuncs.myRepo(error);
         }
     };
     setUserPanned = (bSetPanned) => {
@@ -872,7 +879,7 @@ class MapComponent extends React.Component {
             //     this.props.setPannedCoords(e);
             // }
         } catch (error) {
-            myfuncs.mySentry(error);
+            myfuncs.myRepo(error);
         }
     };
     giveControlBackToMap = () => {

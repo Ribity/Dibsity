@@ -19,14 +19,14 @@ export const HelpMap = ({} ) => {
 					scheduled to depart the spot. Tap the icon to see a description of the car or to
 					reserve the parking spot for you.  When you reserve a spot the icon will
 					change to silver for you, and yellow for everyone else.
-					You must be within 25 meters to mark a spot as reserved
+					You must be within 35 meters to mark a spot as reserved
 
 					{"\n"}
 					{"\n"}
 
                     <Text style={helpStyles.helpBold}>Yellow Icons </Text>
                     indicate parking spots that are currently reserved
-                    by other users.  In theory, these spots are not avaiable to you
+                    by other users.  In theory, these spots are not available to you
 
                     {"\n"}
                     {"\n"}

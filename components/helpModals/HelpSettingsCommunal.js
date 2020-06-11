@@ -20,15 +20,18 @@ export const HelpSettingsCommunal = ( {} ) => {
                     {"\n"}
                     {"\n"}
 					You may wish to change each specific Communal ID periodically in an attempt to
-					keep it more private.  For instance, your apartment building's Communal ID might
-					change each 1st day of the month via an EMail or other communication.
+					keep it more private. Be sure to share it with your other communal members.
+					For instance, your apartment building's Communal ID might
+					change the 1st day of each month via an EMail or other communication that
+					goes out to everyone in the apartment building (in the communal).
 					Or maybe your apartment building will have two
-					'rolling' Communal IDs, and one of the two IDs changes the first of each month. Therefore
-					residents have 30 days to update their Dibsity app with the apartment's set of Communal IDs.
+					'rolling' Communal IDs, and the 1st one changes the first of each odd month, and the 2nd
+					one changes the 1st of each even month.
+					Therefore residents have 30 days to update their Dibsity app with the apartment's set of Communal IDs.
                     {"\n"}
                     {"\n"}
 					If you do not have any Communal IDs listed, or you turn OFF 'Post your departures privately
-					to your Communals', each of your departures will post publicly for ALL Dibsity
+					to your Communals', each of your departures will post publicly for ALL Dibsity users
 					to view and act upon.
                 </Text>
 			</KeyboardAwareScrollView>

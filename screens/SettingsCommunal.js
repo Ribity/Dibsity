@@ -98,7 +98,7 @@ class SettingsCommunalScreen extends React.Component {
                 <Text  style={[helpStyles.helpText, {padding: 10}]}>
 
                         Each 'Communal ID' you enter will be used to
-                        identify your communities. Only Dibsity users that also has one of your IDs listed will
+                        identify your communities. Only Dibsity users that also have one of your IDs listed will
                         see your posted departures
 
                         {"\n"}

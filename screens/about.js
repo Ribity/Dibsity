@@ -44,21 +44,32 @@ export default class AboutScreen extends React.Component {
 
 						<View>
 							<Text  style={{fontSize: 18}}>
-
-
-
-
-							Welcome to Dibsity.
-							{"\n"}
-							{"\n"}
-                            Dibsity = Inclusive crowd-sourced parking.
-                            {"\n"}
-                            {"\n"}
-							EMail:  Parking@dibsity.com
-							{"\n"}
-							{"\n"}
-							We sincerely hope you enjoy Dibsity.
-
+								Dibsity = Dibs for parking
+                                {"\n"}
+                                {"\n"}
+								Being able to 'Call Dibs' for a parking space depends on crowd-sourced participation.
+                                {"\n"}
+                                {"\n"}
+								Regarding dibs, we hope you give as well as your take. Also, please spread the
+								word, especially amongst a specific communal.  The more people in your communal,
+								the more likely you'll find a parking space, and the more Karma you can spread
+								by announcing your departure.
+                                {"\n"}
+                                {"\n"}
+                                I hope communal parking via Dibsity helps bring your community together.
+                                {"\n"}
+                                {"\n"}
+                                If you have any issues, please reach out me.
+								I'm Mark in Raleigh, NC. I do this as a hobby, so please have patience.
+								{"\n"}
+								{"\n"}
+								EMail:  mark@dibsity.com
+								{"\n"}
+								{"\n"}
+								I sincerely hope you enjoy Dibsity.
+                                {"\n"}
+                                {"\n"}
+								Regards - Mark
 						</Text>
 						</View>
 						</ScrollView>

@@ -9,7 +9,7 @@
       "web"
     ],
     "scheme": "dibsity",
-    "version": "1.0.0",
+    "version": "1.0.01",
     "orientation": "portrait",
     "primaryColor": "#008000",
     "icon": "./assets/images/DibsityFaceIcon_1024x1024.png",

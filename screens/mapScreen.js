@@ -52,6 +52,7 @@ const initialState = {
     refresh_map: false,
     dialogInputVisible: false,
     note: "",
+    location: {},
 };
 
 class MapScreen extends React.Component {
@@ -172,14 +173,15 @@ class MapScreen extends React.Component {
         try {
             myfuncs.myBreadCrumbs('getDerivedStateFromProps', "MapScreen");
             let update = {};
-            // if (prevState.stories_list !== nextProps.stories_list) {
-            //     update.stories_list = nextProps.stories_list;
-            // }
 
             // console.log("nextProps:", nextProps);
             if (prevState.refresh_map !== nextProps.tasks.refresh_map) {
                 update.refresh_map = nextProps.tasks.refresh_map;
                 // console.log("update.refresh_map:", update.refresh_map);
+            }
+            if (prevState.location !== nextProps.location) {
+                update.location = nextProps.location;
+                // console.log("update.location:", update.location);
             }
             return Object.keys(update).length ? update: null;
         } catch (error) {
@@ -289,6 +291,7 @@ class MapScreen extends React.Component {
                     }
                 } else {
                     if (movedParkedLoc === null) {
+                        // console.log("props.location:", this.props.location);
                         this.saveParkedLocationToStorage(this.props.location);
                     } else {
                         this.saveParkedLocationToStorage(movedParkedLoc);
@@ -323,7 +326,7 @@ class MapScreen extends React.Component {
             if (this.state.refresh_map === true && this.refreshMapId === -1) {
                 this.refreshMapId = setTimeout(() => {this.timerRefreshMap()}, 1000);
             }
-            // console.log("State.refresh_map:", this.state.refresh_map);
+
             return (
                 <View style={myStyles.container}>
                        <TasksComponent/>
@@ -354,7 +357,8 @@ class MapScreen extends React.Component {
                                       showParkDialog={this.showDialog}
                         />
                         }
-                        {(this.state.readyToGo === true && this.state.refresh_map === false) &&
+                        {(this.state.readyToGo === true && this.state.refresh_map === false &&
+                            myfuncs.isLocationValid(this.state.location) && this.state.location.timestamp !== 0) &&
                         <SaveParkedIcon onPress={this.parkedLocation} />
                         }
                         {(this.state.readyToGo === true &&
@@ -439,6 +443,46 @@ class MapScreen extends React.Component {
                 this.props.navigation.navigate("Vehicle");
                 return;
             }
+
+            if (myfuncs.isLocationValid(this.state.location) === false || this.state.location.timestamp === 0) {
+                Alert.alert("Attempting to determine your current location",
+                    "Please try again in a moment");
+                return;
+            }
+
+            if (myfuncs.isLocationValid(this.props.parkedLocation) === false ) {
+                Alert.alert("Invalid saved parked location",
+                    "Please save your location the next time you park");
+                return;
+            }
+
+            let distance = myfuncs.calcDistance(this.state.location.coords, this.props.parkedLocation.coords);
+            // console.log("Distance: ", distance);
+            // console.log("state.location:", this.state.location);
+            // console.log("props.location:", this.props.parkedLocation);
+
+            if (distance > 1610) {
+                let miles = distance / 1609;
+                miles = Math.trunc(miles);
+                // console.log("miles: ", miles);
+                let mileMsg = "1 mile";
+                if (miles > 1)
+                    mileMsg = miles + " miles";
+                let msg1 = "You are more than " + mileMsg + " from your saved parked location";
+                Alert.alert(msg1,
+                    "Would you like to continue?",
+                    [
+                        {text: 'No'},
+                        {
+                            text: 'Yes', onPress: () => {
+                                this.setState({isDepartingShortlyModalVisible: true})
+                            }
+                        },
+                    ]);
+
+                return;
+            }
+
             this.setState({isDepartingShortlyModalVisible: true});
         } catch (error) {
             myfuncs.myRepo(error);
@@ -492,7 +536,10 @@ class MapScreen extends React.Component {
                     thisTenMins, minutes, setOrUpdateOrPrevious, prevDibs, prevDibsDevId, this.props.settings);
             else {
                     // setTimeout is needed because in iOS when closing a modal, it also closes the Alert.
-                setTimeout( () => Alert.alert("Your departure was NOT posted to others", "Your previously saved Parked Location is invalid"), 1000);
+                setTimeout( () =>
+                    Alert.alert("Your departure was NOT posted to others",
+                    "Your previously saved Parked Location is invalid"),
+                    1000);
             }
         } catch (error) {
             console.log(error);

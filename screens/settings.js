@@ -154,9 +154,8 @@ class SettingsScreen extends React.Component {
                             return;
                         }
                         Alert.alert(
-                            "Your departures will be posted ONLY to users that list at least one of your private Communal Ids. " +
-                            "Your departures will NOT be posted to everyone",
-                            "When arriving, you will see soon-to-be-available 'public' spaces plus soon-to-be=available spaces of your fellow communal users");
+                            "Your departures will be posted ONLY to users that list at least one of your private Communal Ids",
+                            "When arriving, you will see soon-to-be-available 'public' spaces plus soon-to-be-available spaces of your fellow communal users");
                     } else {
                         Alert.alert("Your departures will not be communal-only. " +
                             "Your departures will be posted to ALL Dibsity users",

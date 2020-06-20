@@ -22,7 +22,11 @@ import ApiKeys from "../constants/ApiKeys";
 import {updateParkedLocation} from "../actions/ParkedLocationActions";
 import {setPannedMap, setRecalculateSpaces} from "../actions/TasksActions";
 
-const GEOLOCATION_OPTIONS = { accuracy: Location.Accuracy.Highest, interval: 1000, enableHighAccuracy: true};
+const GEOLOCATION_OPTIONS = {
+    accuracy: Location.Accuracy.BestForNavigation,
+    timeInterval: 1000,
+    distanceInterval: 15,
+};
 
 const multiplier = 25;
 const default_latitudeDelta = .0005 * Math.pow(multiplier, 2);
@@ -90,7 +94,7 @@ class MapComponent extends React.Component {
                 this.props.navigation.addListener('willFocus', this.componentWillFocus),
             ];
 
-            this.intervalId_animate = setInterval(this.handleAnimation,3000); // every 3 seconds
+            this.intervalId_animate = setInterval(this.handleAnimation,1500); // every 1.5 seconds
 
             this.recalc = setInterval(this.recalculate_spaces,3000); // every 3 seconds
 
@@ -924,7 +928,9 @@ class MapComponent extends React.Component {
             myfuncs.myBreadCrumbs('render', "MapComponent");
             let userIcon;
             userIcon = userIcon1;
-            if (this.props.settings.map_user_icon === 2) {
+            // console.log("settings:", this.props.settings);
+            if ( (this.props.settings.map_user_icon === 2) ||
+                 (this.props.settings.map_user_icon === '2') ) {
                 if (this.state.bearing < 180)
                     userIcon = userIcon2e;
                 else

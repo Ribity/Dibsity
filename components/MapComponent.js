@@ -53,6 +53,7 @@ class MapComponent extends React.Component {
             this.watchId = null;
             this.timeoutId_pan = -1;
             this.intervalId_animate = -1;
+            this.redispTrackerId = -1;
             this.recalc = -1;
             this.fire_interval = -1;
             this.userHasControl = false;
@@ -67,6 +68,8 @@ class MapComponent extends React.Component {
                 parkedLocation: null,
                 iconOpacity: 1.0,
                 bDisplayParkedIcon: false,
+
+                showTracker: true,
 
                 bearing: 0,
                 initRegion: null,
@@ -142,6 +145,8 @@ class MapComponent extends React.Component {
 
             if (this.intervalId_animate !== -1)
                 clearInterval(this.intervalId_animate);
+            if (this.redispTrackerId !== -1)
+                clearInterval(this.redispTrackerId);
             if (this.recalc !== -1)
                 clearInterval(this.recalc);
             if (this.fire_interval !== -1)
@@ -351,6 +356,8 @@ class MapComponent extends React.Component {
                             break;
                         case 'modified':
                             // console.log("New firestore", idx, " key_moved:", change.doc.data());
+                                if (MyDefines.logStateSpacesOnTouch)
+                                    console.log("geoSub modified state:", this.state.spaces);
                             this.removeSpace(change.doc.id, idx);
                             this.addSpace(change.doc.id, change.doc.data(), idx);
                             // console.log("New firestore" + idx + " key_moved done");
@@ -494,9 +501,11 @@ class MapComponent extends React.Component {
         // }
         if (minsRemaining === 10)
             minsRemaining = 9;
+
+        // console.log("MinsRemaing:", minsRemaining);
         return(Math.trunc(minsRemaining));
     };
-    addSpace = (devId, rcd, idx) => {
+    addSpace = async (devId, rcd, idx) => {
         try {
             myfuncs.myBreadCrumbs('addSpace', this.props.navigation.state.routeName);
             let bAddIt = true;
@@ -504,7 +513,8 @@ class MapComponent extends React.Component {
             let secsDeparting = rcd.dateTime.seconds + rcd.departingMinutes*60;
             // secsDeparting = Math.trunc(secsDeparting);
             let minsRemaining = this.calcRemainingMinutes(secsDeparting, rcd.departingMinutes);
-            // console.log("minsRemaining:", minsRemaining);
+            if (MyDefines.logStateSpacesOnTouch)
+                console.log("addSpace rcd:", rcd);
             if (MyDefines.log_details)
                 console.log("addSpace Listener", idx, ":RCD:", rcd);
             // console.log("addSpace Listener", idx, ":ID:", devId);
@@ -517,17 +527,26 @@ class MapComponent extends React.Component {
             if (rcd.departingMinutes === -1)
                 bCanceling = true;
 
-            let joined = [...this.state.spaces];
+            let joined = Array.from(this.state.spaces);
+            if (MyDefines.logStateSpacesOnTouch) {
+                console.log("Incoming Joined:", joined);
+                console.log("Incoming state:", this.state.spaces);
+            }
             let index = joined.findIndex(space => space.key === devId);
             if (index >= 0) {
                 // console.log("found previous devId space tenMinutes:", joined[index].tenMinutes);
                 if (joined[index].tenMinutes < this.listenerTenMinutes[idx] ) {
                     joined.splice(index, 1);
-                    // console.log("delete previous devId space:");
+                    if (MyDefines.logStateSpacesOnTouch)
+                        console.log("delete previous devId index:", index);
                     bModified = true;
                 } else {
-                    // console.log("keep previous devId space:");
+                    if (MyDefines.logStateSpacesOnTouch)
+                        console.log("keep previous devid space:", index);
+
                     if (bCanceling === true) {
+                        if (MyDefines.logStateSpacesOnTouch)
+                            console.log("canceling:", index);
                         joined.splice(index, 1);
                         bModified = true;
                     }
@@ -538,6 +557,10 @@ class MapComponent extends React.Component {
             }
             if (bCanceling === true)
                 bAddIt = false;
+
+            if (MyDefines.logStateSpacesOnTouch)
+                console.log("bAddit:", bAddIt, "|minsRemaining:", minsRemaining);
+
             if (bAddIt && minsRemaining >= 0) {
                 bModified = true;
                 let newSpace = {};
@@ -554,12 +577,19 @@ class MapComponent extends React.Component {
                 newSpace.dibsDevId = rcd.dibsDevId;
                 newSpace.communalIds = rcd.communalIds;
                 newSpace.note = rcd.note;
+                newSpace.dateTime = rcd.dateTime;
                 this.setMinutesRemainingIcon(newSpace);
 
+                if (MyDefines.logStateSpacesOnTouch) {
+                    console.log("PreJoin: ", joined);
+                    console.log("Concatting it: ", newSpace);
+                }
                 joined = joined.concat(newSpace);
             }
             if (bModified) {
-                this.setState({spaces: joined});
+                if (MyDefines.logStateSpacesOnTouch)
+                    console.log("bModified:", joined);
+                await this.setState({spaces: joined});
                 this.props.parentSpaces(joined);
             }
             // console.log("Spaces:", joined);
@@ -576,12 +606,14 @@ class MapComponent extends React.Component {
             myfuncs.myBreadCrumbs('removeSpace', this.props.navigation.state.routeName);
             // console.log("removeSpace Listener", idx, ":", this.listenerTenMinutes[idx]);
 
-            let index = this.state.spaces.findIndex(space => space.key === devId);
-            let nextSpaces = this.state.spaces;
-            nextSpaces.splice(index,1);
+            let nextSpaces = Array.from(this.state.spaces);
+            let index = nextSpaces.findIndex(space => space.key === devId);
 
-            await this.setState({spaces: nextSpaces})
-            this.props.parentSpaces(nextSpaces);
+            if (index >= 0) {
+                nextSpaces.splice(index, 1);
+                await this.setState({spaces: nextSpaces});
+                this.props.parentSpaces(nextSpaces);
+            }
         } catch (error) {
             myfuncs.myRepo(error);
         }
@@ -750,6 +782,18 @@ class MapComponent extends React.Component {
             myfuncs.myRepo(error);
         }
     };
+    setTrackerDisplay = (bTrueFalse) => {
+        this.setState({showTracker: bTrueFalse});
+        if (bTrueFalse === false) {
+            if (this.redispTrackerId) {
+                clearTimeout(this.redispTrackerId)
+            }
+           this.redispTrackerId = setInterval(this.redisplayTracker,5000);
+        }
+    };
+    redisplayTracker = () => {
+        this.setState({showTracker: true})
+    };
     onPressSpace = (space) => {
         try {
             myfuncs.myBreadCrumbs('onPressMarker', this.props.navigation.state.routeName);
@@ -806,12 +850,27 @@ class MapComponent extends React.Component {
     };
     reserveThisSpot = (space, bDibs) => {
         // console.log("Reserve this spot:", space.tenMinutes);
+        try {
+            if (bDibs === true) {
+                let tSpaces = [...this.state.spaces];
+                for (let i = 0; i < tSpaces.length; i++) {
+                    if (tSpaces[i].dibs && tSpaces[i].dibsDevId === Constants.deviceId) {
+                        if (tSpaces[i].dateTime !== space.dateTime || tSpaces[i].vehicle !== space.vehicle) {
+                            Alert.alert("You already have dibs on another space", "Please cancel the other dibs");
+                            return;
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            myfuncs.myRepo(error);
+        }
+
         myfuncs.updateFirestoreReservedRcd(space, bDibs, this.props.settings);
     };
     onPressMyParkingSpot = () => {
         try {
             myfuncs.myBreadCrumbs('onPressMyParkingSpot', this.props.navigation.state.routeName);
-
             Alert.alert("Current parked location. ","You also may drag the Park icon to a new location",
                 [
                     {text: 'Ok'},
@@ -923,6 +982,12 @@ class MapComponent extends React.Component {
             myfuncs.myRepo(error);
         }
     };
+    onPressMap = (event) => {
+        if (MyDefines.logStateSpacesOnTouch)
+            console.log("onPressMap state:", this.state.spaces);
+
+        this.setTrackerDisplay(false);
+    };
     render() {
         try {
             myfuncs.myBreadCrumbs('render', "MapComponent");
@@ -998,7 +1063,9 @@ class MapComponent extends React.Component {
                             loadingEnabled
                             showsScale={true}
                             showsCompass={true}
+                            onPress={(e) => this.onPressMap(e)}
                         >
+                            {this.state.showTracker &&
                             <MapView.Marker.Animated
                                 coordinate={this.state.coordinate}
                                 style={{
@@ -1017,6 +1084,7 @@ class MapComponent extends React.Component {
                                        }}
                                 />
                             </MapView.Marker.Animated>
+                            }
 
                             {this.state.spaces.map((space, index) => {
                                 if (space.note !== undefined && space.note !== null && space.note.length > 0)

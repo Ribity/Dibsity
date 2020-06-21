@@ -58,7 +58,7 @@ class TasksComponent extends React.Component {
                 }
             } else {    // Else gone to the background
                 // if (MyDefines.detail_logging)
-                    console.log("App has gone to background");
+                //     console.log("App has gone to background");
                 myfuncs.setAwakeorNot(false);
             }
             appState = nextAppState;

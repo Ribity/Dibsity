@@ -230,7 +230,7 @@ class myFuncs  {
     // Or have a small exposure and just preserve the dibs and devId from the state.spaces
     // which has the exposure of ships passing in the night.
     addFirestoreDepartingRcd = async (coords, note, vehicle, tenMins, departingMinutes, setOrUpdateOrPrevious,
-                                      prevDibs, prevDibsDevId, settings) => {
+                                      prevDibs, prevDibsDevId, settings, bPostCommunal) => {
         try {
             let geofirestore;
 
@@ -265,7 +265,7 @@ class myFuncs  {
                 rcd.dibs = prevDibs;
                 rcd.dibsDevId = prevDibsDevId;
             }
-            if (settings.postCommunal === true) {
+            if (bPostCommunal === true) {
                 rcd.communalIds = settings.communal_id;
             } else {
                 rcd.communalIds = null;

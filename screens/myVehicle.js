@@ -78,6 +78,7 @@ class MyVehicleScreen extends React.Component {
             // }
 
             this.refs.toast.show("Saved", 1000);
+            this.refs.toast_center.show("Saved", 1000);
             this.refs.toast_bottom.show("Saved", 1000);
             this.props.updateVehicle(this.state.vehicle);
             await myfuncs.writeUserDataToLocalStorage("user_vehicle", this.state.vehicle);
@@ -148,6 +149,15 @@ class MyVehicleScreen extends React.Component {
                         fadeOutDuration={1000}
                         opacity={.8}
                         textStyle={{color:'gold',fontSize:21}}
+                        />
+                        <Toast
+                            ref="toast_center"
+                            style={{backgroundColor:'mediumseagreen',borderRadius: 20,padding: 10}}
+                            position='center'
+                            positionValue={0}
+                            fadeOutDuration={1000}
+                            opacity={.8}
+                            textStyle={{color:'gold',fontSize:21}}
                         />
                         <Toast
                             ref="toast_bottom"

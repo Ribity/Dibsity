@@ -104,7 +104,7 @@ class SettingsScreen extends React.Component {
                             switchState={this.state.settings.postCommunal}
                             switchOnValueChange={(bEvent) => this.updateSettings({postCommunal: bEvent})}
                             hasNavArrow={false}
-                            title='Post your departures privately to your Communals'
+                            title='Post your departures privately to your Communals (Default setting)'
                             titleStyle={{fontSize:20}}
                         />
 

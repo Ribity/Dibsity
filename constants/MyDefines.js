@@ -10,6 +10,7 @@ export default {
     oneMinuteIntervals: false,
     disable_newUserSentry: false,
     console_log_breadcrumbs: false,
+    logStateSpacesOnTouch: false,
 
     fakeSeconds: 3,
 

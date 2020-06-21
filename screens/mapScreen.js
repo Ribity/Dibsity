@@ -17,7 +17,7 @@ import WaitComponent  from './../components/WaitComponent';
 import myfuncs from "../services/myFuncs";
 import {MyHelpIcon} from "../components/MyHelpIcon";
 import {MyHelpModal} from "../components/MyHelpModal";
-import {DepartingShortlyModal} from "../components/DepartingShortlyModal";
+import DepartingShortlyModal from "../components/DepartingShortlyModal";
 
 import {MyTouchableLogo} from "../components/MyTouchableLogo";
 import {ScreenTitle} from "../components/screenTitle";
@@ -407,7 +407,6 @@ class MapScreen extends React.Component {
                                     isVisible={this.state.isHelpModalVisible}/>
                         <DepartingShortlyModal onMinutesPressed={this.DepartingMinutesPressed}
                                                onExitPress={this.onDepartingShortlyExitPress}
-                                               settings={this.props.settings}
                                                isVisible={this.state.isDepartingShortlyModalVisible}/>
                 </View>
             );
@@ -496,7 +495,7 @@ class MapScreen extends React.Component {
             myfuncs.myRepo(error);
         }
     };
-    DepartingMinutesPressed = (minutes, bCommunalIds) => {
+    DepartingMinutesPressed = (minutes, bPostCommunals) => {
         try {
             myfuncs.myBreadCrumbs('DepartingMinutesPressed', this.props.navigation.state.routeName);
             let bUpdate = false;
@@ -533,7 +532,8 @@ class MapScreen extends React.Component {
 
             if (myfuncs.isLocationValid(this.props.parkedLocation))
                 myfuncs.addFirestoreDepartingRcd(this.props.parkedLocation.coords, this.state.note, this.props.vehicle,
-                    thisTenMins, minutes, setOrUpdateOrPrevious, prevDibs, prevDibsDevId, this.props.settings);
+                    thisTenMins, minutes, setOrUpdateOrPrevious, prevDibs, prevDibsDevId,
+                    this.props.settings, bPostCommunals);
             else {
                     // setTimeout is needed because in iOS when closing a modal, it also closes the Alert.
                 setTimeout( () =>

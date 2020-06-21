@@ -43,14 +43,15 @@ export default class AboutScreen extends React.Component {
 						}}>
 
 						<View>
-							<Text  style={{fontSize: 18}}>
-								Dibsity = Dibs for parking
+							<Text  style={{fontSize: 16}}>
+								Dibsity = Dibs for parking.
                                 {"\n"}
                                 {"\n"}
-								Being able to 'Call Dibs' for a parking space depends on crowd-sourced participation.
+								Playing with software is a hobby for me.
+								I'm pleased to add Dibsity as my third mobile app to the App Stores.
                                 {"\n"}
                                 {"\n"}
-								Regarding dibs, we hope you give as well as your take. Also, please spread the
+								Regarding dibs, I hope you give as well as you take. Also, please spread the
 								word, especially amongst a specific communal.  The more people in your communal,
 								the more likely you'll find a parking space, and the more Karma you can spread
 								by announcing your departure.
@@ -70,6 +71,9 @@ export default class AboutScreen extends React.Component {
                                 {"\n"}
                                 {"\n"}
 								Regards - Mark
+                                {"\n"}
+                                {"\n"}
+                                P.S., if you're interested to see all of my mobile apps, see the very bottom of dibsity.com
 						</Text>
 						</View>
 						</ScrollView>

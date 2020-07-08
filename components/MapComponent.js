@@ -187,14 +187,14 @@ class MapComponent extends React.Component {
                 let spaceCoord = {
                     latitude: coord.latitude,
                     longitude: coord.longitude,
+                    useNativeDriver: false,
                 };
                 let region = {
-                    ...spaceCoord,
+                    latitude: coord.latitude,
+                    longitude: coord.longitude,
                     latitudeDelta: .0005 * Math.pow(this.props.settings.zoom_multiplier, 2),
                     longitudeDelta: .0005 * Math.pow(this.props.settings.zoom_multiplier, 2),
                 };
-
-                // this.map.animateToRegion(region, 1000 * 2);
 
                 let heading = 0;
                 if (this.props.settings.map_orients_to_users_bearing === 2 ||
@@ -212,6 +212,8 @@ class MapComponent extends React.Component {
                             pitch: 0,
                         }, 1000);
                 }
+
+                // this.state.coordinate.timing(spaceCoord, 1000).start();
                 this.state.coordinate.timing(spaceCoord, 1000).start();
                 if (this.props.settings.map_orients_to_users_bearing !== 2 &&
                     this.props.settings.map_orients_to_users_bearing !== '2')

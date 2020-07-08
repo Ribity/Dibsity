@@ -9,7 +9,7 @@ import {
     Dimensions, TouchableHighlight, Platform,
 } from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import Toast from 'react-native-easy-toast';
+import Toast from 'react-native-root-toast';
 
 import { connect } from 'react-redux';
 
@@ -105,7 +105,19 @@ class SettingsDefaultMapScreen extends React.Component {
             }
             await this.props.updateSettings( {...this.props.settings, ...this.state.settings} );
             this.updateStorage();
-            this.refs.toast.show("Updated Successfully", 2000);
+
+            let tMsg = "Updated Successfully";
+            Toast.show(tMsg, {
+                duration: 3000,
+                position: Toast.positions.CENTER,
+                shadow: true,
+                animation: true,
+                hideOnPress: true,
+                textColor: 'black',
+                backgroundColor: 'mediumseagreen',
+                shadowColor: 'gold',
+                opacity: 0.9,
+            });
 
         } catch (error) {
             myfuncs.myRepo(error);
@@ -195,16 +207,6 @@ class SettingsDefaultMapScreen extends React.Component {
 
                     <View style={{paddingTop: 5}}/>
                     <MyButton title={'Submit'} onPress={this.onSubmitPress}/>
-
-                    <Toast
-                        ref="toast"
-                        style={{backgroundColor:'lightgreen',borderRadius: 20,padding: 10}}
-                        position='center'
-                        positionValue={0}
-                        fadeOutDuration={2000}
-                        opacity={.8}
-                        textStyle={{color:'black',fontSize:21}}
-                    />
 
                     <MyHelpIcon onPress={this.onHelpPress}/>
                     <MyHelpModal screen={"SettingsDefaultMap"}

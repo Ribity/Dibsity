@@ -4,6 +4,7 @@ import { AppNavigator } from './navigation';
 import { Provider } from 'react-redux';
 import { rootReducer } from './reducers/RootReducer'
 import { createStore } from 'redux';
+import { RootSiblingParent } from 'react-native-root-siblings';
 
 const store = createStore(rootReducer);
 
@@ -15,7 +16,9 @@ const App = () => {
 
     return (
                 <Provider store={store}>
+                    <RootSiblingParent>
                         <AppNavigator/>
+                    </RootSiblingParent>
                 </Provider>
     );
 

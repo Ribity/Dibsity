@@ -1,10 +1,10 @@
 import React from 'react';
 import {Alert, StyleSheet, View, Dimensions, Image, Text, TouchableOpacity, Platform, TextInput} from 'react-native';
 import MapComponent from '../components/MapComponent';
+import Toast from 'react-native-root-toast';
 
 import DialogInput from "react-native-dialog-input";
 
-import Toast from 'react-native-easy-toast';
 import MyDefines from '../constants/MyDefines';
 import myStyles from "../myStyles";
 import {connect} from "react-redux";
@@ -259,9 +259,11 @@ class MapScreen extends React.Component {
     handleCancel = () => {
         this.setState({ dialogInputVisible: false });
 
-        let tLocation = {...this.props.parkedLocation};
-        tLocation.coords.latitude += 0.00000000001;
-        this.props.updateParkedLocation(tLocation);
+        if (this.props.parkedLocation !== 0 && this.props.parkedLocation != null && this.props.parkedLocation != {} ) {
+            let tLocation = {...this.props.parkedLocation};
+            tLocation.coords.latitude += 0.00000000001;
+            this.props.updateParkedLocation(tLocation);
+        }
         movedParkedLoc = null;
     };
     handleDialogInput = async (text) => {
@@ -276,8 +278,31 @@ class MapScreen extends React.Component {
                 console.log("Clearing parked location");
                 this.saveParkedLocationToStorage({});
                 this.setState({bUserSavedParkingLocation: false});
-                this.refs.toast.show("Parking Location Cleared", 3000);
-                this.refs.toastCenter.show("Parking Location Cleared", 3000);
+
+                let tMsg = "Parking Location Cleared";
+                Toast.show(tMsg, {
+                    duration: 4000,
+                    position: Toast.positions.TOP,
+                    shadow: true,
+                    animation: true,
+                    hideOnPress: true,
+                    textColor: 'black',
+                    backgroundColor: 'gold',
+                    shadowColor: 'green',
+                    opacity: 0.9,
+                });
+                Toast.show(tMsg, {
+                    duration: 4000,
+                    position: Toast.positions.CENTER,
+                    shadow: true,
+                    animation: true,
+                    hideOnPress: true,
+                    textColor: 'black',
+                    backgroundColor: 'gold',
+                    shadowColor: 'green',
+                    opacity: 0.9,
+                });
+
             } else {
                 if (MyDefines.log_details)
                     console.log("Saving park location");
@@ -298,8 +323,29 @@ class MapScreen extends React.Component {
                     }
                 }
                 this.setState({bUserSavedParkingLocation: true});
-                this.refs.toast.show("Parking Location Saved", 3000);
-                this.refs.toastCenter.show("Parking Location Saved", 3000);
+                let tMsg = "Parking Location Saved";
+                Toast.show(tMsg, {
+                    duration: 4000,
+                    position: Toast.positions.TOP,
+                    shadow: true,
+                    animation: true,
+                    hideOnPress: true,
+                    textColor: 'black',
+                    backgroundColor: 'gold',
+                    shadowColor: 'green',
+                    opacity: 0.9,
+                });
+                Toast.show(tMsg, {
+                    duration: 4000,
+                    position: Toast.positions.CENTER,
+                    shadow: true,
+                    animation: true,
+                    hideOnPress: true,
+                    textColor: 'black',
+                    backgroundColor: 'gold',
+                    shadowColor: 'green',
+                    opacity: 0.9,
+                });
             }
 
         } catch (error) {
@@ -382,24 +428,6 @@ class MapScreen extends React.Component {
                                  submitInput={ (text) => {this.handleDialogInput(text)} }
                                  closeDialog={() => {this.handleCancel()}}>
                     </DialogInput>
-                       <Toast
-                           ref="toast"
-                           style={{backgroundColor:'gold',borderRadius: 20,padding: 10}}
-                           position='top'
-                           positionValue={0}
-                           fadeOutDuration={1000}
-                           opacity={.9}
-                           textStyle={{color:'black',fontSize:21}}
-                       />
-                        <Toast
-                            ref="toastCenter"
-                            style={{backgroundColor:'gold',borderRadius: 20,padding: 10}}
-                            position='center'
-                            positionValue={0}
-                            fadeOutDuration={1000}
-                            opacity={.9}
-                            textStyle={{color:'black',fontSize:21}}
-                        />
 
                        <MyHelpIcon onPress={this.onHelpPress}/>
                        <MyHelpModal screen={"Map"}

@@ -8,10 +8,9 @@ import {
 } from 'react-native';
 
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import Toast from 'react-native-easy-toast';
+import Toast from 'react-native-root-toast';
 
 import { connect } from 'react-redux';
-
 import myStyles from "../myStyles";
 
 import myfuncs from "../services/myFuncs";
@@ -77,9 +76,42 @@ class MyVehicleScreen extends React.Component {
             //     return;
             // }
 
-            this.refs.toast.show("Saved", 1000);
-            this.refs.toast_center.show("Saved", 1000);
-            this.refs.toast_bottom.show("Saved", 1000);
+            let tMsg = "Saved";
+            Toast.show(tMsg, {
+                duration: 2000,
+                position: Toast.positions.TOP,
+                shadow: true,
+                animation: true,
+                hideOnPress: true,
+                textColor: 'black',
+                backgroundColor: 'mediumseagreen',
+                shadowColor: 'gold',
+                opacity: 0.9,
+            });
+            Toast.show(tMsg, {
+                duration: 2000,
+                position: Toast.positions.CENTER,
+                shadow: true,
+                animation: true,
+                hideOnPress: true,
+                textColor: 'black',
+                backgroundColor: 'mediumseagreen',
+                shadowColor: 'gold',
+                opacity: 0.9,
+            });
+            Toast.show(tMsg, {
+                duration: 2000,
+                position: Toast.positions.BOTTOM,
+                shadow: true,
+                animation: true,
+                hideOnPress: true,
+                textColor: 'black',
+                backgroundColor: 'mediumseagreen',
+                shadowColor: 'gold',
+                opacity: 0.9,
+            });
+
+
             this.props.updateVehicle(this.state.vehicle);
             await myfuncs.writeUserDataToLocalStorage("user_vehicle", this.state.vehicle);
         } catch (error) {
@@ -140,34 +172,6 @@ class MyVehicleScreen extends React.Component {
                                   textStyle={myStyles.selectButtonText}
                                   onPress={() => this.onSubmitPress(false)}
                                   title={"Submit"}/>
-
-                        <Toast
-                        ref="toast"
-                        style={{backgroundColor:'mediumseagreen',borderRadius: 20,padding: 10}}
-                        position='top'
-                        positionValue={0}
-                        fadeOutDuration={1000}
-                        opacity={.8}
-                        textStyle={{color:'gold',fontSize:21}}
-                        />
-                        <Toast
-                            ref="toast_center"
-                            style={{backgroundColor:'mediumseagreen',borderRadius: 20,padding: 10}}
-                            position='center'
-                            positionValue={0}
-                            fadeOutDuration={1000}
-                            opacity={.8}
-                            textStyle={{color:'gold',fontSize:21}}
-                        />
-                        <Toast
-                            ref="toast_bottom"
-                            style={{backgroundColor:'mediumseagreen',borderRadius: 20,padding: 10}}
-                            position='bottom'
-                            positionValue={0}
-                            fadeOutDuration={1000}
-                            opacity={.8}
-                            textStyle={{color:'gold',fontSize:21}}
-                        />
 
                     <MyHelpIcon onPress={this.onHelpPress}/>
                     <MyHelpModal screen={"MyVehicle"}

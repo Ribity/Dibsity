@@ -14,7 +14,7 @@ export default {
 
     fakeSeconds: 3,
 
-    myRepo_logging: true,
+    myRepo_logging: true,   // Should be true for real builds. This sends exceptions to Sentry
 
     myStatusBarHeight: Constants.statusBarHeight,
     myBottomTabBarHeight: 45,

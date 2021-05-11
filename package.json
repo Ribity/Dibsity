@@ -26,7 +26,7 @@
     "firebase": "7.9.0",
     "geofirestore": "^3.4.1",
     "geolib": "^3.2.1",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "react": "16.11.0",
     "react-dom": "16.11.0",
     "react-native": "https://github.com/expo/react-native/archive/sdk-38.0.2.tar.gz",
